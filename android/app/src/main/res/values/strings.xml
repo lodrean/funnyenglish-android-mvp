@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">FunnyEnglish</string>
+    <string name="home_greeting">Привет! Я Арчи 👋</string>
+    <string name="home_subtitle">Давай учить английский весело!</string>
+    <string name="chat_with_archie">Поболтать с Арчи</string>
+    <string name="dictionary">Словарь</string>
+    <string name="quizzes">Квизы</string>
+    <string name="games">Игры</string>
+    <string name="profile">Профиль</string>
+</resources>
