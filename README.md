@@ -175,3 +175,28 @@ docker-compose down
 ```
 
 **Примечание:** Текущая реализация использует упрощённую нотацию. Для полной поддержки шахмат нужно интегрировать библиотеку `python-chess`.
+
+---
+
+## Android MVP
+
+Мобильное приложение для изучения английского на Android (Jetpack Compose).
+
+### Модули
+- `:app` — точка входа, навигация
+- `:core:{design-system,domain,data,presentation}` — общие слои
+- `:feature:{home,dictionary,quiz,chat,games,profile}` — фичи
+
+### Технологии
+- Jetpack Compose + Material 3
+- Koin DI
+- Room + Ktor Client
+- MediaPipe LLM Inference (Gemma 2B on-device)
+- Play Asset Delivery (модель AI)
+- AppTracer (crash reporting)
+
+### Сборка
+```bash
+cd android
+./gradlew :app:assembleDebug
+```
