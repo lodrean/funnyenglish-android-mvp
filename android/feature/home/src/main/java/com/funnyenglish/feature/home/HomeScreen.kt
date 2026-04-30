@@ -1,5 +1,11 @@
 package com.funnyenglish.feature.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +22,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.PlayArrow
@@ -30,6 +36,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,12 +54,15 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun HomeScreen(
+    onNavigateTo: (String) -> Unit,
     viewModel: HomeViewModel = koinViewModel()
 ) {
     val state = viewModel.state.collectAsStateWithLifecycle().value
 
     ObserveAsEvents(viewModel.events) { event ->
-        // Navigation will be handled here when routes are ready
+        when (event) {
+            is HomeEvent.NavigateTo -> onNavigateTo(event.route)
+        }
     }
 
     HomeContent(
@@ -75,40 +87,52 @@ private fun HomeContent(
         ) {
             // Greeting + Archie avatar placeholder
             item {
-                ArchieHeader(state.userName)
+                AnimatedListItem(index = 0) {
+                    ArchieHeader(state.userName)
+                }
             }
 
             // Stats row
             item {
-                StatsRow(streak = state.streakDays, xp = state.totalXp)
+                AnimatedListItem(index = 1) {
+                    StatsRow(streak = state.streakDays, xp = state.totalXp)
+                }
             }
 
             // Daily Word card
             item {
-                DailyWordCard(
-                    word = state.dailyWord,
-                    definition = state.dailyWordDefinition,
-                    onClick = { onAction(HomeAction.OnDailyWordClick) }
-                )
+                AnimatedListItem(index = 2) {
+                    DailyWordCard(
+                        word = state.dailyWord,
+                        definition = state.dailyWordDefinition,
+                        onClick = { onAction(HomeAction.OnDailyWordClick) }
+                    )
+                }
             }
 
             // Feature cards grid
             item {
-                Text(
-                    text = "Чем займёмся?",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                AnimatedListItem(index = 3) {
+                    Text(
+                        text = "Чем займёмся?",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
             }
 
             item {
-                FeatureGrid(onAction = onAction)
+                AnimatedListItem(index = 4) {
+                    FeatureGrid(onAction = onAction)
+                }
             }
 
             // Motivational quote
             item {
-                MotivationCard()
+                AnimatedListItem(index = 5) {
+                    MotivationCard()
+                }
             }
         }
     }
@@ -263,7 +287,7 @@ private fun DailyWordCard(
 @Composable
 private fun FeatureGrid(onAction: (HomeAction) -> Unit) {
     val features = listOf(
-        FeatureItem("Чат с Арчи", Icons.Default.Send, Primary, HomeAction.OnChatClick),
+        FeatureItem("Чат с Арчи", Icons.AutoMirrored.Filled.Send, Primary, HomeAction.OnChatClick),
         FeatureItem("Словарь", Icons.Default.Search, Secondary, HomeAction.OnDictionaryClick),
         FeatureItem("Квизы", Icons.Default.ThumbUp, Tertiary, HomeAction.OnQuizClick),
         FeatureItem("Игры", Icons.Default.PlayArrow, Primary, HomeAction.OnGamesClick),
@@ -369,5 +393,27 @@ private fun MotivationCard() {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+private fun AnimatedListItem(
+    index: Int,
+    content: @Composable () -> Unit
+) {
+    val visible = remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(index * 80L)
+        visible.value = true
+    }
+    AnimatedVisibility(
+        visible = visible.value,
+        enter = fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMedium)) +
+                slideInVertically(
+                    animationSpec = spring(stiffness = Spring.StiffnessMedium),
+                    initialOffsetY = { it / 4 }
+                )
+    ) {
+        content()
     }
 }

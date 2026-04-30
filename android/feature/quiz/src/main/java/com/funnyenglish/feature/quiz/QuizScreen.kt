@@ -1,5 +1,16 @@
 package com.funnyenglish.feature.quiz
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -87,25 +99,38 @@ private fun QuizContent(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                    )
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = question.word,
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                AnimatedContent(
+                    targetState = question.word,
+                    transitionSpec = {
+                        (fadeIn(animationSpec = tween(300)) +
+                         slideInVertically(animationSpec = spring(stiffness = Spring.StiffnessMedium), initialOffsetY = { it / 2 }))
+                            .togetherWith(
+                                fadeOut(animationSpec = tween(200)) +
+                                slideOutVertically(animationSpec = tween(200), targetOffsetY = { -it / 4 })
+                            )
+                    },
+                    label = "question"
+                ) { animatedWord ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                         )
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = animatedWord,
+                                style = MaterialTheme.typography.displaySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
                     }
                 }
 
@@ -127,13 +152,20 @@ private fun QuizContent(
                             else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                         }
 
+                        val scale by animateFloatAsState(
+                            targetValue = if (index == state.selectedAnswer) 1.05f else 1f,
+                            animationSpec = spring(stiffness = Spring.StiffnessMedium),
+                            label = "answerScale"
+                        )
                         Card(
                             onClick = {
                                 if (state.selectedAnswer == null) {
                                     onAction(QuizAction.SelectAnswer(index))
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .scale(scale),
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = backgroundColor),
                             enabled = state.selectedAnswer == null

@@ -1,5 +1,10 @@
 package com.funnyenglish
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -34,6 +39,8 @@ sealed class BottomNavItem(val route: String, val label: String, val icon: andro
     data object Chat : BottomNavItem("chat", "Чат", Icons.Default.Email)
     data object Profile : BottomNavItem("profile", "Профиль", Icons.Default.Person)
 }
+
+private const val NAV_ANIMATION_DURATION = 300
 
 @Composable
 fun AppNavigation() {
@@ -75,10 +82,40 @@ fun AppNavigation() {
         NavHost(
             navController = navController,
             startDestination = BottomNavItem.Home.route,
-            modifier = Modifier.padding(paddingValues)
+            modifier = Modifier.padding(paddingValues),
+            enterTransition = {
+                fadeIn(animationSpec = tween(NAV_ANIMATION_DURATION)) +
+                slideInVertically(
+                    animationSpec = tween(NAV_ANIMATION_DURATION),
+                    initialOffsetY = { it / 8 }
+                )
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(NAV_ANIMATION_DURATION))
+            },
+            popEnterTransition = {
+                fadeIn(animationSpec = tween(NAV_ANIMATION_DURATION))
+            },
+            popExitTransition = {
+                fadeOut(animationSpec = tween(NAV_ANIMATION_DURATION)) +
+                slideOutVertically(
+                    animationSpec = tween(NAV_ANIMATION_DURATION),
+                    targetOffsetY = { it / 8 }
+                )
+            }
         ) {
             composable(BottomNavItem.Home.route) {
-                HomeScreen()
+                HomeScreen(
+                    onNavigateTo = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
             }
             composable(BottomNavItem.Dictionary.route) {
                 DictionaryScreen()

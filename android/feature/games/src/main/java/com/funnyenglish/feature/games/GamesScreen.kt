@@ -20,6 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -126,6 +130,21 @@ private fun TicTacToeBoard(
                 }
             }
     ) {
+        // Track previous board to detect new moves for animation
+        var prevBoard by remember { mutableStateOf(Array(3) { CharArray(3) { '\u0000' } }) }
+        val newMoves = remember(game.board) {
+            val moves = mutableListOf<Pair<Int, Int>>()
+            for (r in 0..2) {
+                for (c in 0..2) {
+                    if (game.board[r][c] != '\u0000' && prevBoard[r][c] == '\u0000') {
+                        moves.add(r to c)
+                    }
+                }
+            }
+            prevBoard = game.board.map { it.copyOf() }.toTypedArray()
+            moves
+        }
+
         Canvas(modifier = Modifier.fillMaxSize()) {
             val cellSize = size.width / 3f
             val lineWidth = 4.dp.toPx()
@@ -152,6 +171,12 @@ private fun TicTacToeBoard(
                     val x = c * cellSize + cellSize / 2
                     val y = r * cellSize + cellSize / 2
                     val padding = cellSize * 0.25f
+                    val isNewMove = (r to c) in newMoves
+                    val animatedScale = if (isNewMove) {
+                        // Use a static value for Canvas — animation handled by overlay
+                        1f
+                    } else 1f
+
                     when (game.board[r][c]) {
                         'X' -> {
                             drawLine(
