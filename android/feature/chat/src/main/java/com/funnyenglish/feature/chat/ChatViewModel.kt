@@ -38,7 +38,14 @@ class ChatViewModel(
 
     init {
         loadHistory()
-        checkModelStatus()
+        try {
+            checkModelStatus()
+        } catch (e: Throwable) {
+            Log.e(TAG, "checkModelStatus crashed in init", e)
+            _state.update {
+                it.copy(error = "🚫 AI-чат недоступен на этом устройстве.")
+            }
+        }
     }
 
     private fun loadHistory() {
@@ -128,7 +135,16 @@ class ChatViewModel(
     }
 
     private fun initModel(modelPath: String) {
-        viewModelScope.launch {
+        val handler = kotlinx.coroutines.CoroutineExceptionHandler { _, throwable ->
+            Log.e(TAG, "Unhandled exception in initModel coroutine", throwable)
+            _state.update {
+                it.copy(
+                    modelDownloadProgress = null,
+                    error = "🚫 AI-чат недоступен на этом устройстве."
+                )
+            }
+        }
+        viewModelScope.launch(handler) {
             _state.update { it.copy(modelDownloadProgress = 0.95f) }
             val result = try {
                 localAi.initModel(modelPath)
@@ -150,6 +166,7 @@ class ChatViewModel(
 
                     val currentVariant = _state.value.modelVariant
                     val isUnsupportedDevice = error is UnsatisfiedLinkError ||
+                            error is NoClassDefFoundError ||
                             errorMsg.contains("libllm_inference_engine_jni", ignoreCase = true) ||
                             errorMsg.contains("dlopen failed", ignoreCase = true)
 
