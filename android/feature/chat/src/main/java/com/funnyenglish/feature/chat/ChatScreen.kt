@@ -148,7 +148,7 @@ private fun ChatContent(
             text = {
                 Column {
                     Text(
-                        "Для работы Арчи офлайн нужно загрузить модель Gemma 2B (~1.3GB). " +
+                        "Для работы Арчи офлайн нужно загрузить модель Gemma 2B (~2.5GB). " +
                         "Это разовая загрузка."
                     )
                     if (state.isDownloading || state.modelDownloadProgress != null) {

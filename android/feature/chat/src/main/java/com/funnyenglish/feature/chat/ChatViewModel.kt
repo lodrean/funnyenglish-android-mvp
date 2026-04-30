@@ -1,6 +1,7 @@
 package com.funnyenglish.feature.chat
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -8,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.UUID
 
 class ChatViewModel(
@@ -22,7 +24,7 @@ class ChatViewModel(
             messages = listOf(
                 ChatMessage(
                     id = "welcome",
-                    text = "Привет! Я Арчи 🤖\nЯ работаю прямо на твоём телефоне — без интернета!\n\nНо для начала нужно загрузить модель (~1.3GB).",
+                    text = "Привет! Я Арчи 🤖\nЯ работаю прямо на твоём телефоне — без интернета!\n\nНо для начала нужно загрузить модель (~2.5GB).",
                     isFromUser = false
                 )
             )
@@ -112,13 +114,53 @@ class ChatViewModel(
                     }
                 }
                 .onFailure { error ->
+                    val errorMsg = error.message ?: ""
+                    Log.e(TAG, "initModel failed: $errorMsg", error)
+
+                    // Delete corrupted/broken model file so next restart triggers re-download
+                    deleteModelFile()
+
+                    val userFriendlyError = when {
+                        errorMsg.contains("OpenCL", ignoreCase = true) ||
+                        errorMsg.contains("clSetPerfHint", ignoreCase = true) ||
+                        errorMsg.contains("GPU", ignoreCase = true) -> {
+                            "Ваше устройство не поддерживает GPU-ускорение. " +
+                            "Попробуйте скачать CPU-версию модели (~2.5GB)."
+                        }
+                        errorMsg.contains("file not found", ignoreCase = true) -> {
+                            "Файл модели не найден. Нажмите «Загрузить», чтобы скачать модель."
+                        }
+                        else -> {
+                            "Не удалось запустить модель: $errorMsg. " +
+                            "Файл модели был удалён, попробуйте загрузить заново."
+                        }
+                    }
+
                     _state.update {
                         it.copy(
                             modelDownloadProgress = null,
-                            error = "Не удалось инициализировать модель: ${error.message}"
+                            showModelDownloadDialog = true,
+                            error = userFriendlyError
                         )
                     }
                 }
+        }
+    }
+
+    private fun deleteModelFile() {
+        try {
+            val modelFile = File(context.filesDir, LocalAiRepository.MODEL_FILENAME)
+            if (modelFile.exists()) {
+                modelFile.delete()
+                Log.d(TAG, "Deleted corrupted model file: ${modelFile.absolutePath}")
+            }
+            val tempFile = File(context.filesDir, "${LocalAiRepository.MODEL_FILENAME}.tmp")
+            if (tempFile.exists()) {
+                tempFile.delete()
+                Log.d(TAG, "Deleted temp file: ${tempFile.absolutePath}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to delete model file", e)
         }
     }
 
@@ -194,5 +236,9 @@ class ChatViewModel(
 
 Пользователь: $userMessage
 Арчи:""".trimIndent()
+    }
+
+    companion object {
+        private const val TAG = "ChatViewModel"
     }
 }
