@@ -37,7 +37,7 @@ class LocalAiRepository(private val context: Context) {
 
             llmInference = LlmInference.createFromOptions(context, options)
             Result.success(Unit)
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Result.failure(e)
         }
     }

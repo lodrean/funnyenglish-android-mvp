@@ -112,7 +112,11 @@ class ChatViewModel(
     private fun initModel(modelPath: String) {
         viewModelScope.launch {
             _state.update { it.copy(modelDownloadProgress = 0.95f) }
-            val result = localAi.initModel(modelPath)
+            val result = try {
+                localAi.initModel(modelPath)
+            } catch (e: Throwable) {
+                Result.failure(e)
+            }
             result
                 .onSuccess {
                     _state.update {
@@ -127,6 +131,22 @@ class ChatViewModel(
                     Log.e(TAG, "initModel failed: $errorMsg", error)
 
                     val currentVariant = _state.value.modelVariant
+                    val isUnsupportedDevice = error is UnsatisfiedLinkError ||
+                            errorMsg.contains("libllm_inference_engine_jni", ignoreCase = true) ||
+                            errorMsg.contains("dlopen failed", ignoreCase = true)
+
+                    if (isUnsupportedDevice) {
+                        _state.update {
+                            it.copy(
+                                modelDownloadProgress = null,
+                                showModelDownloadDialog = false,
+                                error = "🚫 AI-чат не поддерживается на этом устройстве.\n" +
+                                        "Требуется процессор ARM (arm64-v8a или armeabi-v7a)."
+                            )
+                        }
+                        return@launch
+                    }
+
                     val isGpuError = errorMsg.contains("OpenCL", ignoreCase = true) ||
                             errorMsg.contains("clSetPerfHint", ignoreCase = true) ||
                             errorMsg.contains("GPU", ignoreCase = true)
@@ -284,6 +304,20 @@ class ChatViewModel(
                         messages = filtered + ChatMessage(
                             id = UUID.randomUUID().toString(),
                             text = "Ой, ошибка: ${e.message}",
+                            isFromUser = false
+                        ),
+                        isLoading = false
+                    )
+                }
+            } catch (e: Throwable) {
+                // UnsatisfiedLinkError, NoClassDefFoundError, etc.
+                Log.e(TAG, "Critical error generating response", e)
+                _state.update { state ->
+                    val filtered = state.messages.filter { it.id != "loading" }
+                    state.copy(
+                        messages = filtered + ChatMessage(
+                            id = UUID.randomUUID().toString(),
+                            text = "🚫 AI-чат недоступен на этом устройстве.",
                             isFromUser = false
                         ),
                         isLoading = false
