@@ -29,10 +29,11 @@ fun ConfettiOverlay(
 ) {
     if (!active) return
 
-    val particles = remember { List(CONFETTI_COUNT) { ConfettiParticle.random() } }
+    val particles = remember { List(CONFETTI_COUNT) { ConfettiParticle.random(canvasWidth = 1f) } }
     val progresses = remember { List(CONFETTI_COUNT) { Animatable(0f) } }
 
     LaunchedEffect(active) {
+        progresses.forEach { it.snapTo(0f) }
         progresses.forEachIndexed { index, animatable ->
             launch {
                 delay(index * 15L)
@@ -64,7 +65,7 @@ private fun DrawScope.drawConfetti(
     canvasWidth: Float,
     canvasHeight: Float
 ) {
-    val x = particle.startX + (particle.velocityX * progress * canvasWidth * 0.5f)
+    val x = particle.startX * canvasWidth + (particle.velocityX * progress * canvasWidth * 0.5f)
     val y = particle.startY + (particle.velocityY * progress * canvasHeight * 0.8f) + (progress * progress * canvasHeight * 0.3f)
     val rotation = particle.rotation + (progress * particle.rotationSpeed * 360f)
     val size = particle.size * (1f - progress * 0.3f)
@@ -93,14 +94,14 @@ private data class ConfettiParticle(
     val color: Color
 ) {
     companion object {
-        fun random(): ConfettiParticle {
+        fun random(canvasWidth: Float): ConfettiParticle {
             val colors = listOf(
                 Color(0xFFFF6B6B), Color(0xFF4ECDC4), Color(0xFFFFE66D),
                 Color(0xFF95E1D3), Color(0xFFF38181), Color(0xFFAA96DA),
                 Color(0xFFFCBAD3), Color(0xFFA8D8EA)
             )
             return ConfettiParticle(
-                startX = Random.nextFloat() * 1000f,
+                startX = Random.nextFloat() * canvasWidth.coerceAtLeast(100f),
                 startY = -50f,
                 velocityX = (Random.nextFloat() - 0.5f) * 2f,
                 velocityY = Random.nextFloat() * 0.5f + 0.5f,

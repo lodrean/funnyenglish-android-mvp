@@ -60,61 +60,63 @@ fun GamesScreen() {
                     onFinished = { showConfetti = false }
                 )
             }
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = message,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                TicTacToeBoard(
-                    game = game,
-                    onMove = { row, col ->
-                        if (game.makeMove(row, col)) {
-                            message = when {
-                                game.winner == 'X' -> { showConfetti = true; "🎉 Ты победил!" }
-                                game.isDraw -> "🤝 Ничья!"
-                                else -> {
-                                    game.botMove()
-                                    when {
-                                        game.winner == 'O' -> "🤖 Арчи победил!"
-                                        game.isDraw -> "🤝 Ничья!"
-                                        else -> "Твой ход (X)"
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                    )
+                ) {
+                    TicTacToeBoard(
+                        game = game,
+                        onMove = { row, col ->
+                            val newGame = game.makeMove(row, col)
+                            if (newGame !== game) {
+                                game = newGame
+                                message = when {
+                                    game.winner == 'X' -> { showConfetti = true; "🎉 Ты победил!" }
+                                    game.isDraw -> "🤝 Ничья!"
+                                    else -> {
+                                        game = game.botMove()
+                                        when {
+                                            game.winner == 'O' -> "🤖 Арчи победил!"
+                                            game.isDraw -> "🤝 Ничья!"
+                                            else -> "Твой ход (X)"
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = {
-                    game = TicTacToeGame()
-                    message = "Твой ход (X)"
-                    showConfetti = false
+                    )
                 }
-            ) {
-                Text("Новая игра")
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        game = TicTacToeGame()
+                        message = "Твой ход (X)"
+                        showConfetti = false
+                    }
+                ) {
+                    Text("Новая игра")
+                }
             }
-        }
         }
     }
 }
@@ -132,7 +134,7 @@ private fun TicTacToeBoard(
         modifier = Modifier
             .size(300.dp)
             .padding(8.dp)
-            .pointerInput(game.board.contentDeepToString()) {
+            .pointerInput(Unit) {
                 detectTapGestures { offset ->
                     val cellSize = size.width / 3f
                     val col = (offset.x / cellSize).toInt()
@@ -144,17 +146,17 @@ private fun TicTacToeBoard(
             }
     ) {
         // Track previous board to detect new moves for animation
-        var prevBoard by remember { mutableStateOf(Array(3) { CharArray(3) { '\u0000' } }) }
-        val newMoves = remember(game.board) {
+        var prevBoard by remember { mutableStateOf(List(3) { List(3) { ' ' } }) }
+        val newMoves = remember(game) {
             val moves = mutableListOf<Pair<Int, Int>>()
             for (r in 0..2) {
                 for (c in 0..2) {
-                    if (game.board[r][c] != '\u0000' && prevBoard[r][c] == '\u0000') {
+                    if (game.board[r][c] != ' ' && prevBoard[r][c] == ' ') {
                         moves.add(r to c)
                     }
                 }
             }
-            prevBoard = game.board.map { it.copyOf() }.toTypedArray()
+            prevBoard = game.board
             moves
         }
 

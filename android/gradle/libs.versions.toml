@@ -12,6 +12,7 @@ koinCompose = "3.5.6"
 ktor = "2.3.11"
 kotlinxSerialization = "1.6.3"
 coil = "2.6.0"
+datastore = "1.1.1"
 playAssetDelivery = "2.2.2"
 tracer = "1.0.8"
 junit5 = "5.10.2"
@@ -54,6 +55,7 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 play-asset-delivery = { group = "com.google.android.play", name = "asset-delivery", version.ref = "playAssetDelivery" }
 play-asset-delivery-ktx = { group = "com.google.android.play", name = "asset-delivery-ktx", version.ref = "playAssetDelivery" }
 

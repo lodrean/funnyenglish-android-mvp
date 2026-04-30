@@ -3,6 +3,7 @@ package com.funnyenglish.core.data.di
 import android.content.Context
 import androidx.room.Room
 import com.funnyenglish.core.data.local.AppDatabase
+import com.funnyenglish.core.data.local.ThemeRepository
 import com.funnyenglish.core.data.local.WordDao
 import com.funnyenglish.core.data.remote.DictionaryApi
 import com.funnyenglish.core.data.remote.HttpClientFactory
@@ -25,4 +26,6 @@ val dataModule = module {
     single<WordDao> { get<AppDatabase>().wordDao() }
 
     single<WordRepository> { WordRepositoryImpl(get(), get()) }
+
+    single { ThemeRepository(get()) }
 }

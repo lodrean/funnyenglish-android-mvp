@@ -112,7 +112,7 @@ private fun HomeContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
-            if (state.isLoading || state.isRefreshing) {
+            if (state.isLoading) {
                 // Shimmer placeholders
                 items(6) { index ->
                     AnimatedListItem(index = index) {

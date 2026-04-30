@@ -19,7 +19,8 @@ class ChatViewModel(
     private val context: Context,
     private val localAi: LocalAiRepository,
     private val modelPathResolver: ModelPathResolver,
-    private val modelDownloader: ModelDownloader
+    private val modelDownloader: ModelDownloader,
+    private val chatHistory: ChatHistoryRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -36,7 +37,23 @@ class ChatViewModel(
     val state: StateFlow<ChatState> = _state.asStateFlow()
 
     init {
+        loadHistory()
         checkModelStatus()
+    }
+
+    private fun loadHistory() {
+        viewModelScope.launch {
+            val history = chatHistory.loadMessages()
+            if (history.isNotEmpty()) {
+                _state.update { it.copy(messages = history) }
+            }
+        }
+    }
+
+    private fun saveHistory() {
+        viewModelScope.launch {
+            chatHistory.saveMessages(_state.value.messages)
+        }
     }
 
     fun onAction(action: ChatAction) {
@@ -46,6 +63,7 @@ class ChatViewModel(
             ChatAction.DismissBatteryWarning -> _state.update { it.copy(showBatteryWarning = false) }
             ChatAction.DismissModelDialog -> _state.update { it.copy(showModelDownloadDialog = false) }
             ChatAction.DownloadModel -> downloadModel()
+            ChatAction.ClearHistory -> clearHistory()
         }
     }
 
@@ -211,6 +229,7 @@ class ChatViewModel(
     private fun sendMessage() {
         val text = _state.value.inputText.trim()
         if (text.isBlank()) return
+        if (_state.value.isLoading) return
         if (!localAi.isModelLoaded) {
             _state.update { it.copy(showModelDownloadDialog = true) }
             return
@@ -229,8 +248,9 @@ class ChatViewModel(
             text = text,
             isFromUser = true
         )
+        val loadingId = "loading-${UUID.randomUUID()}"
         val loadingMessage = ChatMessage(
-            id = "loading",
+            id = loadingId,
             text = "",
             isFromUser = false,
             isLoading = true
@@ -260,7 +280,7 @@ class ChatViewModel(
                 Log.d(TAG, "Response received: ${cleanedResponse.take(100)}")
 
                 _state.update { state ->
-                    val filtered = state.messages.filter { it.id != "loading" }
+                    val filtered = state.messages.filter { !it.isLoading }
                     state.copy(
                         messages = filtered + ChatMessage(
                             id = UUID.randomUUID().toString(),
@@ -270,10 +290,11 @@ class ChatViewModel(
                         isLoading = false
                     )
                 }
+                saveHistory()
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                 Log.e(TAG, "Response generation timed out", e)
                 _state.update { state ->
-                    val filtered = state.messages.filter { it.id != "loading" }
+                    val filtered = state.messages.filter { !it.isLoading }
                     state.copy(
                         messages = filtered + ChatMessage(
                             id = UUID.randomUUID().toString(),
@@ -283,10 +304,11 @@ class ChatViewModel(
                         isLoading = false
                     )
                 }
+                saveHistory()
             } catch (e: OutOfMemoryError) {
                 Log.e(TAG, "OOM during inference", e)
                 _state.update { state ->
-                    val filtered = state.messages.filter { it.id != "loading" }
+                    val filtered = state.messages.filter { !it.isLoading }
                     state.copy(
                         messages = filtered + ChatMessage(
                             id = UUID.randomUUID().toString(),
@@ -296,10 +318,11 @@ class ChatViewModel(
                         isLoading = false
                     )
                 }
+                saveHistory()
             } catch (e: Exception) {
                 Log.e(TAG, "Error generating response", e)
                 _state.update { state ->
-                    val filtered = state.messages.filter { it.id != "loading" }
+                    val filtered = state.messages.filter { !it.isLoading }
                     state.copy(
                         messages = filtered + ChatMessage(
                             id = UUID.randomUUID().toString(),
@@ -309,11 +332,12 @@ class ChatViewModel(
                         isLoading = false
                     )
                 }
+                saveHistory()
             } catch (e: Throwable) {
                 // UnsatisfiedLinkError, NoClassDefFoundError, etc.
                 Log.e(TAG, "Critical error generating response", e)
                 _state.update { state ->
-                    val filtered = state.messages.filter { it.id != "loading" }
+                    val filtered = state.messages.filter { !it.isLoading }
                     state.copy(
                         messages = filtered + ChatMessage(
                             id = UUID.randomUUID().toString(),
@@ -323,6 +347,23 @@ class ChatViewModel(
                         isLoading = false
                     )
                 }
+            }
+        }
+    }
+
+    private fun clearHistory() {
+        viewModelScope.launch {
+            chatHistory.clear()
+            _state.update {
+                it.copy(
+                    messages = listOf(
+                        ChatMessage(
+                            id = "welcome",
+                            text = "Привет! Я Арчи 🤖\nЯ работаю прямо на твоём телефоне — без интернета!\n\nДля начала нужно загрузить AI-модель.",
+                            isFromUser = false
+                        )
+                    )
+                )
             }
         }
     }

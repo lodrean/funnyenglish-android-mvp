@@ -89,7 +89,7 @@ class ModelDownloader(private val context: Context) {
             }
 
             Result.success(DownloadResult(outputFile.absolutePath, variant))
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             Log.e(TAG, "[${variant.displayName}] Download failed", e)
             Result.failure(e)
         }

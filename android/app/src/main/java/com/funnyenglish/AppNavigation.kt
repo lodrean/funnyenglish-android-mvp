@@ -91,7 +91,11 @@ fun AppNavigation() {
                 )
             },
             exitTransition = {
-                fadeOut(animationSpec = tween(NAV_ANIMATION_DURATION))
+                fadeOut(animationSpec = tween(NAV_ANIMATION_DURATION)) +
+                slideOutVertically(
+                    animationSpec = tween(NAV_ANIMATION_DURATION),
+                    targetOffsetY = { it / 8 }
+                )
             },
             popEnterTransition = {
                 fadeIn(animationSpec = tween(NAV_ANIMATION_DURATION))

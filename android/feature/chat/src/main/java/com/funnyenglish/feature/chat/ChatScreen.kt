@@ -33,12 +33,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,8 +59,22 @@ fun ChatScreen(
     viewModel: ChatViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.showBatteryWarning) {
+        if (state.showBatteryWarning) {
+            snackbarHostState.showSnackbar(
+                message = "⚠️ Низкий заряд. Модель нагружает процессор — рекомендую подключить зарядку.",
+                actionLabel = "Понятно",
+                duration = SnackbarDuration.Long
+            )
+            viewModel.onAction(ChatAction.DismissBatteryWarning)
+        }
+    }
+
     ChatContent(
         state = state,
+        snackbarHostState = snackbarHostState,
         onAction = viewModel::onAction
     )
 }
@@ -65,6 +83,7 @@ fun ChatScreen(
 @Composable
 private fun ChatContent(
     state: ChatState,
+    snackbarHostState: SnackbarHostState,
     onAction: (ChatAction) -> Unit
 ) {
     val listState = rememberLazyListState()
@@ -89,6 +108,13 @@ private fun ChatContent(
                             )
                         }
                     }
+                },
+                actions = {
+                    if (state.messages.size > 1) {
+                        TextButton(onClick = { onAction(ChatAction.ClearHistory) }) {
+                            Text("Очистить")
+                        }
+                    }
                 }
             )
         },
@@ -99,12 +125,14 @@ private fun ChatContent(
                 onSend = { onAction(ChatAction.SendMessage) },
                 enabled = !state.isLoading
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
+                .imePadding()
         ) {
             LazyColumn(
                 state = listState,
@@ -116,22 +144,6 @@ private fun ChatContent(
                     ChatBubble(message = message)
                 }
             }
-        }
-    }
-
-    // Battery warning snackbar
-    if (state.showBatteryWarning) {
-        androidx.compose.material3.Snackbar(
-            modifier = Modifier.padding(16.dp),
-            action = {
-                TextButton(onClick = { onAction(ChatAction.DismissBatteryWarning) }) {
-                    Text("Понятно")
-                }
-            }
-        ) {
-            Text(
-                "⚠️ Низкий заряд. Модель нагружает процессор — рекомендую подключить зарядку."
-            )
         }
     }
 
