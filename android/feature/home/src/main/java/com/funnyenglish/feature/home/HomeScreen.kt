@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.PlayArrow
@@ -32,9 +33,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.funnyenglish.core.designsystem.components.ShimmerBox
 import com.funnyenglish.core.designsystem.theme.Primary
 import com.funnyenglish.core.designsystem.theme.Secondary
 import com.funnyenglish.core.designsystem.theme.Tertiary
@@ -71,12 +76,34 @@ fun HomeScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeContent(
     state: HomeState,
     onAction: (HomeAction) -> Unit
 ) {
-    Scaffold { paddingValues ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("FunnyEnglish") },
+                actions = {
+                    IconButton(
+                        onClick = { onAction(HomeAction.OnRefresh) },
+                        enabled = !state.isRefreshing
+                    ) {
+                        if (state.isRefreshing) {
+                            androidx.compose.material3.CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Default.Refresh, contentDescription = "Обновить")
+                        }
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -85,53 +112,69 @@ private fun HomeContent(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
-            // Greeting + Archie avatar placeholder
-            item {
-                AnimatedListItem(index = 0) {
-                    ArchieHeader(state.userName)
+            if (state.isLoading || state.isRefreshing) {
+                // Shimmer placeholders
+                items(6) { index ->
+                    AnimatedListItem(index = index) {
+                        when (index) {
+                            0 -> ShimmerBox(modifier = Modifier.fillMaxWidth().height(80.dp), shape = RoundedCornerShape(16.dp))
+                            1 -> ShimmerBox(modifier = Modifier.fillMaxWidth().height(100.dp), shape = RoundedCornerShape(16.dp))
+                            2 -> ShimmerBox(modifier = Modifier.fillMaxWidth().height(120.dp), shape = RoundedCornerShape(20.dp))
+                            3 -> ShimmerBox(modifier = Modifier.fillMaxWidth().height(40.dp), shape = RoundedCornerShape(8.dp))
+                            4 -> ShimmerBox(modifier = Modifier.fillMaxWidth().height(200.dp), shape = RoundedCornerShape(16.dp))
+                            5 -> ShimmerBox(modifier = Modifier.fillMaxWidth().height(100.dp), shape = RoundedCornerShape(16.dp))
+                        }
+                    }
                 }
-            }
-
-            // Stats row
-            item {
-                AnimatedListItem(index = 1) {
-                    StatsRow(streak = state.streakDays, xp = state.totalXp)
+            } else {
+                // Greeting + Archie avatar placeholder
+                item {
+                    AnimatedListItem(index = 0) {
+                        ArchieHeader(state.userName)
+                    }
                 }
-            }
 
-            // Daily Word card
-            item {
-                AnimatedListItem(index = 2) {
-                    DailyWordCard(
-                        word = state.dailyWord,
-                        definition = state.dailyWordDefinition,
-                        onClick = { onAction(HomeAction.OnDailyWordClick) }
-                    )
+                // Stats row
+                item {
+                    AnimatedListItem(index = 1) {
+                        StatsRow(streak = state.streakDays, xp = state.totalXp)
+                    }
                 }
-            }
 
-            // Feature cards grid
-            item {
-                AnimatedListItem(index = 3) {
-                    Text(
-                        text = "Чем займёмся?",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                // Daily Word card
+                item {
+                    AnimatedListItem(index = 2) {
+                        DailyWordCard(
+                            word = state.dailyWord,
+                            definition = state.dailyWordDefinition,
+                            onClick = { onAction(HomeAction.OnDailyWordClick) }
+                        )
+                    }
                 }
-            }
 
-            item {
-                AnimatedListItem(index = 4) {
-                    FeatureGrid(onAction = onAction)
+                // Feature cards grid
+                item {
+                    AnimatedListItem(index = 3) {
+                        Text(
+                            text = "Чем займёмся?",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
-            }
 
-            // Motivational quote
-            item {
-                AnimatedListItem(index = 5) {
-                    MotivationCard()
+                item {
+                    AnimatedListItem(index = 4) {
+                        FeatureGrid(onAction = onAction)
+                    }
+                }
+
+                // Motivational quote
+                item {
+                    AnimatedListItem(index = 5) {
+                        MotivationCard()
+                    }
                 }
             }
         }

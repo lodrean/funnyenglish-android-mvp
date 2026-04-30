@@ -4,11 +4,14 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.io.File
 import java.util.UUID
 
@@ -48,14 +51,12 @@ class ChatViewModel(
 
     private fun checkModelStatus() {
         if (!localAi.isModelLoaded) {
-            // Check if any model already exists on disk
             val modelPath = modelPathResolver.resolveModelPath()
             if (modelPath != null) {
                 initModel(modelPath)
                 return
             }
 
-            // No model found — auto-select variant and show dialog
             val variant = ModelVariant.autoSelect()
             _state.update {
                 it.copy(
@@ -125,7 +126,6 @@ class ChatViewModel(
                     val errorMsg = error.message ?: ""
                     Log.e(TAG, "initModel failed: $errorMsg", error)
 
-                    // Check if this is a GPU/OpenCL error and we haven't tried CPU yet
                     val currentVariant = _state.value.modelVariant
                     val isGpuError = errorMsg.contains("OpenCL", ignoreCase = true) ||
                             errorMsg.contains("clSetPerfHint", ignoreCase = true) ||
@@ -146,7 +146,6 @@ class ChatViewModel(
                         return@launch
                     }
 
-                    // Generic failure — delete the file and show error
                     deleteModelFile(currentVariant)
 
                     val userFriendlyError = when {
@@ -197,10 +196,12 @@ class ChatViewModel(
             return
         }
 
-        // Battery warning
-        if (BatteryMonitor.isBatteryLow(context) && !BatteryMonitor.isCharging(context)) {
-            _state.update { it.copy(showBatteryWarning = true) }
-            return
+        // Battery warning — non-blocking, just show a snackbar-style warning
+        val batteryLow = try {
+            BatteryMonitor.isBatteryLow(context) && !BatteryMonitor.isCharging(context)
+        } catch (e: Exception) {
+            Log.e(TAG, "Battery check failed", e)
+            false
         }
 
         val userMessage = ChatMessage(
@@ -219,15 +220,24 @@ class ChatViewModel(
             it.copy(
                 messages = it.messages + userMessage + loadingMessage,
                 inputText = "",
-                isLoading = true
+                isLoading = true,
+                showBatteryWarning = batteryLow
             )
         }
 
         viewModelScope.launch {
             try {
+                Log.d(TAG, "Generating response for: $text")
                 val prompt = buildPrompt(text)
-                val response = localAi.generateResponse(prompt)
+
+                val response = withContext(Dispatchers.IO) {
+                    withTimeout(120_000) { // 2 minutes timeout for CPU inference
+                        localAi.generateResponse(prompt)
+                    }
+                }
+
                 val cleanedResponse = response.replace(prompt, "").trim()
+                Log.d(TAG, "Response received: ${cleanedResponse.take(100)}")
 
                 _state.update { state ->
                     val filtered = state.messages.filter { it.id != "loading" }
@@ -240,7 +250,34 @@ class ChatViewModel(
                         isLoading = false
                     )
                 }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                Log.e(TAG, "Response generation timed out", e)
+                _state.update { state ->
+                    val filtered = state.messages.filter { it.id != "loading" }
+                    state.copy(
+                        messages = filtered + ChatMessage(
+                            id = UUID.randomUUID().toString(),
+                            text = "⏳ Арчи думает слишком долго... Попробуй задать вопрос покороче или подключи зарядку.",
+                            isFromUser = false
+                        ),
+                        isLoading = false
+                    )
+                }
+            } catch (e: OutOfMemoryError) {
+                Log.e(TAG, "OOM during inference", e)
+                _state.update { state ->
+                    val filtered = state.messages.filter { it.id != "loading" }
+                    state.copy(
+                        messages = filtered + ChatMessage(
+                            id = UUID.randomUUID().toString(),
+                            text = "😰 Не хватает памяти для работы модели. Закрой другие приложения и попробуй снова.",
+                            isFromUser = false
+                        ),
+                        isLoading = false
+                    )
+                }
             } catch (e: Exception) {
+                Log.e(TAG, "Error generating response", e)
                 _state.update { state ->
                     val filtered = state.messages.filter { it.id != "loading" }
                     state.copy(

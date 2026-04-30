@@ -119,23 +119,20 @@ private fun ChatContent(
         }
     }
 
-    // Battery warning dialog
+    // Battery warning snackbar
     if (state.showBatteryWarning) {
-        AlertDialog(
-            onDismissRequest = { onAction(ChatAction.DismissBatteryWarning) },
-            title = { Text("⚠️ Низкий заряд батареи") },
-            text = {
-                Text(
-                    "Локальная AI-модель сильно нагружает процессор и быстро разряжает телефон. " +
-                    "Рекомендую подключить зарядку или дождаться уровня заряда выше 30%."
-                )
-            },
-            confirmButton = {
+        androidx.compose.material3.Snackbar(
+            modifier = Modifier.padding(16.dp),
+            action = {
                 TextButton(onClick = { onAction(ChatAction.DismissBatteryWarning) }) {
                     Text("Понятно")
                 }
             }
-        )
+        ) {
+            Text(
+                "⚠️ Низкий заряд. Модель нагружает процессор — рекомендую подключить зарядку."
+            )
+        }
     }
 
     // Model download dialog

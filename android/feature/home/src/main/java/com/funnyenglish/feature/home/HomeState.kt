@@ -6,5 +6,6 @@ data class HomeState(
     val totalXp: Int = 0,
     val dailyWord: String = "serendipity",
     val dailyWordDefinition: String = "a fortunate discovery by accident",
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false
 )

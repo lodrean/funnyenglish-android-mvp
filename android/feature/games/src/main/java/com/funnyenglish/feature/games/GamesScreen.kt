@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +40,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.funnyenglish.core.designsystem.components.ConfettiOverlay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,9 +48,18 @@ fun GamesScreen() {
     var game by remember { mutableStateOf(TicTacToeGame()) }
     var message by remember { mutableStateOf("Твой ход (X)") }
 
+    var showConfetti by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         topBar = { TopAppBar(title = { Text("Крестики-нолики") }) }
     ) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (showConfetti) {
+                ConfettiOverlay(
+                    active = showConfetti,
+                    onFinished = { showConfetti = false }
+                )
+            }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -76,7 +87,7 @@ fun GamesScreen() {
                     onMove = { row, col ->
                         if (game.makeMove(row, col)) {
                             message = when {
-                                game.winner == 'X' -> "🎉 Ты победил!"
+                                game.winner == 'X' -> { showConfetti = true; "🎉 Ты победил!" }
                                 game.isDraw -> "🤝 Ничья!"
                                 else -> {
                                     game.botMove()
@@ -98,10 +109,12 @@ fun GamesScreen() {
                 onClick = {
                     game = TicTacToeGame()
                     message = "Твой ход (X)"
+                    showConfetti = false
                 }
             ) {
                 Text("Новая игра")
             }
+        }
         }
     }
 }
