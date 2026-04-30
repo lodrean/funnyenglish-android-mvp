@@ -53,6 +53,7 @@ class LocalAiRepository(private val context: Context) {
     }
 
     companion object {
-        const val MODEL_FILENAME = "gemma-2b-it-cpu-int4.bin"
+        const val MODEL_FILENAME_GPU = "gemma-2b-it-gpu-int4.bin"
+        const val MODEL_FILENAME_CPU = "gemma-2b-it-cpu-int4.bin"
     }
 }

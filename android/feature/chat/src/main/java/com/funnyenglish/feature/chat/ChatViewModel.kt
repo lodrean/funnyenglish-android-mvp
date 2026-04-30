@@ -24,7 +24,7 @@ class ChatViewModel(
             messages = listOf(
                 ChatMessage(
                     id = "welcome",
-                    text = "Привет! Я Арчи 🤖\nЯ работаю прямо на твоём телефоне — без интернета!\n\nНо для начала нужно загрузить модель (~2.5GB).",
+                    text = "Привет! Я Арчи 🤖\nЯ работаю прямо на твоём телефоне — без интернета!\n\nДля начала нужно загрузить AI-модель.",
                     isFromUser = false
                 )
             )
@@ -48,11 +48,20 @@ class ChatViewModel(
 
     private fun checkModelStatus() {
         if (!localAi.isModelLoaded) {
+            // Check if any model already exists on disk
             val modelPath = modelPathResolver.resolveModelPath()
-            if (modelPath == null) {
-                _state.update { it.copy(showModelDownloadDialog = true) }
-            } else {
+            if (modelPath != null) {
                 initModel(modelPath)
+                return
+            }
+
+            // No model found — auto-select variant and show dialog
+            val variant = ModelVariant.autoSelect()
+            _state.update {
+                it.copy(
+                    showModelDownloadDialog = true,
+                    modelVariant = variant
+                )
             }
         }
     }
@@ -60,28 +69,32 @@ class ChatViewModel(
     private fun downloadModel() {
         if (_state.value.isDownloading) return
 
+        val variant = _state.value.modelVariant ?: ModelVariant.autoSelect()
+
         viewModelScope.launch {
             _state.update {
                 it.copy(
                     isDownloading = true,
                     modelDownloadProgress = 0f,
-                    error = null
+                    error = null,
+                    modelVariant = variant
                 )
             }
 
-            val result = modelDownloader.download { progress ->
+            val result = modelDownloader.download(variant = variant) { progress ->
                 _state.update { it.copy(modelDownloadProgress = progress) }
             }
 
             result
-                .onSuccess { path ->
+                .onSuccess { downloadResult ->
                     _state.update {
                         it.copy(
                             isDownloading = false,
-                            modelDownloadProgress = null
+                            modelDownloadProgress = null,
+                            modelVariant = downloadResult.variant
                         )
                     }
-                    initModel(path)
+                    initModel(downloadResult.path)
                 }
                 .onFailure { error ->
                     _state.update {
@@ -104,12 +117,7 @@ class ChatViewModel(
                     _state.update {
                         it.copy(
                             modelDownloadProgress = null,
-                            showModelDownloadDialog = false,
-                            messages = it.messages + ChatMessage(
-                                id = UUID.randomUUID().toString(),
-                                text = "✅ Модель загружена! Можешь писать мне что угодно.",
-                                isFromUser = false
-                            )
+                            showModelDownloadDialog = false
                         )
                     }
                 }
@@ -117,22 +125,37 @@ class ChatViewModel(
                     val errorMsg = error.message ?: ""
                     Log.e(TAG, "initModel failed: $errorMsg", error)
 
-                    // Delete corrupted/broken model file so next restart triggers re-download
-                    deleteModelFile()
+                    // Check if this is a GPU/OpenCL error and we haven't tried CPU yet
+                    val currentVariant = _state.value.modelVariant
+                    val isGpuError = errorMsg.contains("OpenCL", ignoreCase = true) ||
+                            errorMsg.contains("clSetPerfHint", ignoreCase = true) ||
+                            errorMsg.contains("GPU", ignoreCase = true)
+
+                    if (isGpuError && currentVariant == ModelVariant.GPU) {
+                        Log.d(TAG, "GPU model failed, falling back to CPU variant")
+                        deleteModelFile(ModelVariant.GPU)
+                        _state.update {
+                            it.copy(
+                                modelDownloadProgress = null,
+                                modelVariant = ModelVariant.CPU,
+                                error = "GPU-ускорение не поддерживается на этом устройстве. " +
+                                        "Переключаюсь на CPU-версию (${ModelVariant.CPU.sizeLabel}). " +
+                                        "Нажмите «Загрузить» для скачивания."
+                            )
+                        }
+                        return@launch
+                    }
+
+                    // Generic failure — delete the file and show error
+                    deleteModelFile(currentVariant)
 
                     val userFriendlyError = when {
-                        errorMsg.contains("OpenCL", ignoreCase = true) ||
-                        errorMsg.contains("clSetPerfHint", ignoreCase = true) ||
-                        errorMsg.contains("GPU", ignoreCase = true) -> {
-                            "Ваше устройство не поддерживает GPU-ускорение. " +
-                            "Попробуйте скачать CPU-версию модели (~2.5GB)."
-                        }
                         errorMsg.contains("file not found", ignoreCase = true) -> {
                             "Файл модели не найден. Нажмите «Загрузить», чтобы скачать модель."
                         }
                         else -> {
                             "Не удалось запустить модель: $errorMsg. " +
-                            "Файл модели был удалён, попробуйте загрузить заново."
+                                    "Файл модели был удалён, попробуйте загрузить заново."
                         }
                     }
 
@@ -147,17 +170,19 @@ class ChatViewModel(
         }
     }
 
-    private fun deleteModelFile() {
+    private fun deleteModelFile(variant: ModelVariant?) {
         try {
-            val modelFile = File(context.filesDir, LocalAiRepository.MODEL_FILENAME)
-            if (modelFile.exists()) {
-                modelFile.delete()
-                Log.d(TAG, "Deleted corrupted model file: ${modelFile.absolutePath}")
-            }
-            val tempFile = File(context.filesDir, "${LocalAiRepository.MODEL_FILENAME}.tmp")
-            if (tempFile.exists()) {
-                tempFile.delete()
-                Log.d(TAG, "Deleted temp file: ${tempFile.absolutePath}")
+            variant?.let {
+                val modelFile = File(context.filesDir, it.fileName)
+                if (modelFile.exists()) {
+                    modelFile.delete()
+                    Log.d(TAG, "Deleted model file: ${modelFile.absolutePath}")
+                }
+                val tempFile = File(context.filesDir, "${it.fileName}.tmp")
+                if (tempFile.exists()) {
+                    tempFile.delete()
+                    Log.d(TAG, "Deleted temp file: ${tempFile.absolutePath}")
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to delete model file", e)

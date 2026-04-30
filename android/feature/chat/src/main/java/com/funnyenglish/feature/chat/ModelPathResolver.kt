@@ -18,25 +18,44 @@ class ModelPathResolver(private val context: Context) {
         // 1. Try Play Asset Delivery first
         try {
             val assetPackManager = AssetPackManagerFactory.getInstance(context)
-            val assetLocation = assetPackManager.getAssetLocation(
+            // Try GPU first, then CPU in asset pack
+            val gpuAsset = assetPackManager.getAssetLocation(
                 ASSET_PACK_NAME,
-                LocalAiRepository.MODEL_FILENAME
+                ModelVariant.GPU.fileName
             )
-            if (assetLocation != null) {
-                return assetLocation.path()
-            }
+            if (gpuAsset != null) return gpuAsset.path()
+
+            val cpuAsset = assetPackManager.getAssetLocation(
+                ASSET_PACK_NAME,
+                ModelVariant.CPU.fileName
+            )
+            if (cpuAsset != null) return cpuAsset.path()
         } catch (e: Exception) {
             // AssetPackManager not available (debug APK, RuStore, etc.)
         }
 
-        // 2. Fallback: filesDir (downloaded model)
-        val downloadedFile = File(context.filesDir, LocalAiRepository.MODEL_FILENAME)
-        if (downloadedFile.exists()) {
-            return downloadedFile.absolutePath
-        }
+        // 2. Fallback: filesDir (downloaded model) — prefer GPU, fallback to CPU
+        val gpuFile = File(context.filesDir, ModelVariant.GPU.fileName)
+        if (gpuFile.exists()) return gpuFile.absolutePath
+
+        val cpuFile = File(context.filesDir, ModelVariant.CPU.fileName)
+        if (cpuFile.exists()) return cpuFile.absolutePath
 
         // 3. Model not found
         return null
+    }
+
+    fun resolveModelPath(variant: ModelVariant): String? {
+        // Try Asset Pack first for specific variant
+        try {
+            val assetPackManager = AssetPackManagerFactory.getInstance(context)
+            val assetLocation = assetPackManager.getAssetLocation(ASSET_PACK_NAME, variant.fileName)
+            if (assetLocation != null) return assetLocation.path()
+        } catch (e: Exception) { /* AssetPackManager not available */ }
+
+        // Fallback to filesDir
+        val file = File(context.filesDir, variant.fileName)
+        return if (file.exists()) file.absolutePath else null
     }
 
     companion object {

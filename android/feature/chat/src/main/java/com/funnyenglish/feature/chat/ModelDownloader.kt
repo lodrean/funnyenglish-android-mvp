@@ -12,26 +12,26 @@ import java.net.URL
 class ModelDownloader(private val context: Context) {
 
     suspend fun download(
-        url: String = DEFAULT_DOWNLOAD_URL,
+        variant: ModelVariant = ModelVariant.autoSelect(),
         onProgress: (Float) -> Unit
-    ): Result<String> = withContext(Dispatchers.IO) {
+    ): Result<DownloadResult> = withContext(Dispatchers.IO) {
         try {
-            val outputFile = File(context.filesDir, LocalAiRepository.MODEL_FILENAME)
-            val tempFile = File(context.filesDir, "${LocalAiRepository.MODEL_FILENAME}.tmp")
+            val outputFile = File(context.filesDir, variant.fileName)
+            val tempFile = File(context.filesDir, "${variant.fileName}.tmp")
 
             // If output file already exists, we're done
             if (outputFile.exists()) {
                 Log.d(TAG, "Model already exists at ${outputFile.absolutePath}")
-                return@withContext Result.success(outputFile.absolutePath)
+                return@withContext Result.success(DownloadResult(outputFile.absolutePath, variant))
             }
 
             val startByte = if (tempFile.exists()) tempFile.length() else 0L
-            Log.d(TAG, "Resuming download from byte $startByte, temp file exists: ${tempFile.exists()}")
+            Log.d(TAG, "[${variant.displayName}] Resuming download from byte $startByte, temp exists: ${tempFile.exists()}")
 
-            val connection = openConnectionWithRange(url, startByte)
+            val connection = openConnectionWithRange(variant.downloadUrl, startByte)
 
             val responseCode = connection.responseCode
-            Log.d(TAG, "Response code: $responseCode")
+            Log.d(TAG, "[${variant.displayName}] Response code: $responseCode")
 
             // Handle 416 Range Not Satisfiable (file already fully downloaded)
             if (responseCode == HTTP_RANGE_NOT_SATISFIABLE) {
@@ -39,7 +39,7 @@ class ModelDownloader(private val context: Context) {
                 if (tempFile.exists() && !tempFile.renameTo(outputFile)) {
                     copyAndDelete(tempFile, outputFile)
                 }
-                return@withContext Result.success(outputFile.absolutePath)
+                return@withContext Result.success(DownloadResult(outputFile.absolutePath, variant))
             }
 
             if (responseCode != HttpURLConnection.HTTP_OK && responseCode != HttpURLConnection.HTTP_PARTIAL) {
@@ -60,7 +60,7 @@ class ModelDownloader(private val context: Context) {
             } else {
                 contentLength
             }
-            Log.d(TAG, "Content-Length: $contentLength, totalLength: $totalLength")
+            Log.d(TAG, "[${variant.displayName}] Content-Length: $contentLength, totalLength: $totalLength")
 
             connection.inputStream.use { input ->
                 val outputMode = if (isResuming && startByte > 0) {
@@ -83,14 +83,14 @@ class ModelDownloader(private val context: Context) {
                 }
             }
 
-            Log.d(TAG, "Download complete, renaming temp file to output")
+            Log.d(TAG, "[${variant.displayName}] Download complete, renaming temp file to output")
             if (!tempFile.renameTo(outputFile)) {
                 copyAndDelete(tempFile, outputFile)
             }
 
-            Result.success(outputFile.absolutePath)
+            Result.success(DownloadResult(outputFile.absolutePath, variant))
         } catch (e: Exception) {
-            Log.e(TAG, "Download failed", e)
+            Log.e(TAG, "[${variant.displayName}] Download failed", e)
             Result.failure(e)
         }
     }
@@ -149,14 +149,16 @@ class ModelDownloader(private val context: Context) {
         source.delete()
     }
 
+    data class DownloadResult(
+        val path: String,
+        val variant: ModelVariant
+    )
+
     companion object {
         private const val TAG = "ModelDownloader"
         private const val BUFFER_SIZE = 8192
         private const val HTTP_RANGE_NOT_SATISFIABLE = 416
         private const val HTTP_TEMPORARY_REDIRECT = 307
         private const val HTTP_PERMANENT_REDIRECT = 308
-
-        const val DEFAULT_DOWNLOAD_URL =
-            "https://github.com/lodrean/funnyenglish-android-mvp/releases/download/model-v1.1/gemma-2b-it-cpu-int4.bin"
     }
 }

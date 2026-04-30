@@ -140,6 +140,7 @@ private fun ChatContent(
 
     // Model download dialog
     if (state.showModelDownloadDialog) {
+        val variant = state.modelVariant ?: ModelVariant.CPU
         AlertDialog(
             onDismissRequest = {
                 if (!state.isDownloading) onAction(ChatAction.DismissModelDialog)
@@ -148,8 +149,9 @@ private fun ChatContent(
             text = {
                 Column {
                     Text(
-                        "Для работы Арчи офлайн нужно загрузить модель Gemma 2B (~2.5GB). " +
-                        "Это разовая загрузка."
+                        "Для работы Арчи офлайн нужно загрузить модель Gemma 2B (${variant.sizeLabel}). " +
+                        "Это разовая загрузка.\n\n" +
+                        "Версия: ${variant.displayName} ${if (variant == ModelVariant.GPU) "(быстрее)" else "(совместимость)"}"
                     )
                     if (state.isDownloading || state.modelDownloadProgress != null) {
                         Spacer(modifier = Modifier.height(12.dp))
@@ -177,7 +179,7 @@ private fun ChatContent(
                     onClick = { onAction(ChatAction.DownloadModel) },
                     enabled = !state.isDownloading
                 ) {
-                    Text(if (state.isDownloading) "Загрузка..." else "Загрузить")
+                    Text(if (state.isDownloading) "Загрузка..." else "Загрузить ${variant.displayName}")
                 }
             },
             dismissButton = {
