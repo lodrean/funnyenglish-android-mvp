@@ -20,7 +20,7 @@ class ChatViewModel(
     private val localAi: LocalAiRepository,
     private val modelPathResolver: ModelPathResolver,
     private val modelDownloader: ModelDownloader,
-    private val chatHistory: ChatHistoryRepository
+    private val chatContext: ChatContextManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -37,29 +37,22 @@ class ChatViewModel(
     val state: StateFlow<ChatState> = _state.asStateFlow()
 
     init {
-        loadHistory()
-        try {
-            checkModelStatus()
-        } catch (e: Throwable) {
-            Log.e(TAG, "checkModelStatus crashed in init", e)
-            _state.update {
-                it.copy(error = "🚫 AI-чат недоступен на этом устройстве.")
-            }
-        }
-    }
-
-    private fun loadHistory() {
         viewModelScope.launch {
-            val history = chatHistory.loadMessages()
+            chatContext.load()
+            val history = chatContext.messages.value
             if (history.isNotEmpty()) {
                 _state.update { it.copy(messages = history) }
             }
         }
-    }
-
-    private fun saveHistory() {
-        viewModelScope.launch {
-            chatHistory.saveMessages(_state.value.messages)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                checkModelStatus()
+            } catch (e: Throwable) {
+                Log.e(TAG, "checkModelStatus crashed in init", e)
+                _state.update {
+                    it.copy(error = "🚫 AI-чат недоступен на этом устройстве.")
+                }
+            }
         }
     }
 
@@ -76,13 +69,17 @@ class ChatViewModel(
 
     private fun checkModelStatus() {
         if (!localAi.isModelLoaded) {
-            val modelPath = modelPathResolver.resolveModelPath()
+            // Always use CPU variant to avoid native crashes from broken GPU drivers
+            val variant = ModelVariant.CPU
+            val modelPath = modelPathResolver.resolveModelPath(variant)
             if (modelPath != null) {
                 initModel(modelPath)
                 return
             }
 
-            val variant = ModelVariant.autoSelect()
+            // Clean up old incompatible GPU model if it exists
+            deleteModelFile(ModelVariant.GPU)
+
             _state.update {
                 it.copy(
                     showModelDownloadDialog = true,
@@ -147,7 +144,9 @@ class ChatViewModel(
         viewModelScope.launch(handler) {
             _state.update { it.copy(modelDownloadProgress = 0.95f) }
             val result = try {
-                localAi.initModel(modelPath)
+                withContext(Dispatchers.Default) {
+                    localAi.initModel(modelPath)
+                }
             } catch (e: Throwable) {
                 Result.failure(e)
             }
@@ -260,32 +259,48 @@ class ChatViewModel(
             false
         }
 
-        val userMessage = ChatMessage(
-            id = UUID.randomUUID().toString(),
-            text = text,
-            isFromUser = true
-        )
-        val loadingId = "loading-${UUID.randomUUID()}"
-        val loadingMessage = ChatMessage(
-            id = loadingId,
-            text = "",
-            isFromUser = false,
-            isLoading = true
-        )
-
-        _state.update {
-            it.copy(
-                messages = it.messages + userMessage + loadingMessage,
-                inputText = "",
-                isLoading = true,
-                showBatteryWarning = batteryLow
-            )
-        }
-
         viewModelScope.launch {
             try {
+                // Persist user message and update UI
+                val userMsg = chatContext.addUserMessage(text)
+                val loadingId = "loading-${UUID.randomUUID()}"
+                val loadingMessage = ChatMessage(
+                    id = loadingId,
+                    text = "",
+                    isFromUser = false,
+                    isLoading = true
+                )
+                _state.update {
+                    it.copy(
+                        messages = it.messages + userMsg + loadingMessage,
+                        inputText = "",
+                        isLoading = true,
+                        showBatteryWarning = batteryLow
+                    )
+                }
+
+                // Memory safety check before heavy inference
+                val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+                val memoryInfo = android.app.ActivityManager.MemoryInfo()
+                activityManager.getMemoryInfo(memoryInfo)
+                if (memoryInfo.availMem < 400 * 1024 * 1024L) {
+                    Log.w(TAG, "Low memory before inference: ${memoryInfo.availMem / 1024 / 1024}MB available")
+                    val errorMsg = ChatMessage(
+                        id = UUID.randomUUID().toString(),
+                        text = "😰 Недостаточно свободной памяти. Закрой другие приложения и попробуй снова.",
+                        isFromUser = false
+                    )
+                    _state.update { state ->
+                        state.copy(
+                            messages = state.messages.filter { !it.isLoading } + errorMsg,
+                            isLoading = false
+                        )
+                    }
+                    return@launch
+                }
+
                 Log.d(TAG, "Generating response for: $text")
-                val prompt = buildPrompt(text)
+                val prompt = chatContext.buildPrompt(SYSTEM_PROMPT, text)
 
                 val response = withContext(Dispatchers.IO) {
                     withTimeout(120_000) { // 2 minutes timeout for CPU inference
@@ -293,74 +308,69 @@ class ChatViewModel(
                     }
                 }
 
-                val cleanedResponse = response.replace(prompt, "").trim()
+                val cleanedResponse = sanitizeResponse(response)
                 Log.d(TAG, "Response received: ${cleanedResponse.take(100)}")
 
+                // Persist model response and update UI
+                val modelMsg = chatContext.addModelMessage(
+                    cleanedResponse.ifBlank { "Хм, я что-то запутался... 🤔" }
+                )
                 _state.update { state ->
-                    val filtered = state.messages.filter { !it.isLoading }
                     state.copy(
-                        messages = filtered + ChatMessage(
-                            id = UUID.randomUUID().toString(),
-                            text = cleanedResponse.ifBlank { "Хм, я что-то запутался... 🤔" },
-                            isFromUser = false
-                        ),
+                        messages = state.messages.filter { !it.isLoading } + modelMsg,
                         isLoading = false
                     )
                 }
-                saveHistory()
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                 Log.e(TAG, "Response generation timed out", e)
+                val errorMsg = ChatMessage(
+                    id = UUID.randomUUID().toString(),
+                    text = "⏳ Арчи думает слишком долго... Попробуй задать вопрос покороче или подключи зарядку.",
+                    isFromUser = false
+                )
                 _state.update { state ->
-                    val filtered = state.messages.filter { !it.isLoading }
                     state.copy(
-                        messages = filtered + ChatMessage(
-                            id = UUID.randomUUID().toString(),
-                            text = "⏳ Арчи думает слишком долго... Попробуй задать вопрос покороче или подключи зарядку.",
-                            isFromUser = false
-                        ),
+                        messages = state.messages.filter { !it.isLoading } + errorMsg,
                         isLoading = false
                     )
                 }
-                saveHistory()
             } catch (e: OutOfMemoryError) {
                 Log.e(TAG, "OOM during inference", e)
+                val errorMsg = ChatMessage(
+                    id = UUID.randomUUID().toString(),
+                    text = "😰 Не хватает памяти для работы модели. Закрой другие приложения и попробуй снова.",
+                    isFromUser = false
+                )
                 _state.update { state ->
-                    val filtered = state.messages.filter { !it.isLoading }
                     state.copy(
-                        messages = filtered + ChatMessage(
-                            id = UUID.randomUUID().toString(),
-                            text = "😰 Не хватает памяти для работы модели. Закрой другие приложения и попробуй снова.",
-                            isFromUser = false
-                        ),
+                        messages = state.messages.filter { !it.isLoading } + errorMsg,
                         isLoading = false
                     )
                 }
-                saveHistory()
             } catch (e: Exception) {
                 Log.e(TAG, "Error generating response", e)
+                val errorMsg = ChatMessage(
+                    id = UUID.randomUUID().toString(),
+                    text = "Ой, ошибка: ${e.message}",
+                    isFromUser = false
+                )
                 _state.update { state ->
-                    val filtered = state.messages.filter { !it.isLoading }
                     state.copy(
-                        messages = filtered + ChatMessage(
-                            id = UUID.randomUUID().toString(),
-                            text = "Ой, ошибка: ${e.message}",
-                            isFromUser = false
-                        ),
+                        messages = state.messages.filter { !it.isLoading } + errorMsg,
                         isLoading = false
                     )
                 }
-                saveHistory()
             } catch (e: Throwable) {
                 // UnsatisfiedLinkError, NoClassDefFoundError, etc.
                 Log.e(TAG, "Critical error generating response", e)
+                val errorMsg = ChatMessage(
+                    id = UUID.randomUUID().toString(),
+                    text = "🚫 AI-чат недоступен на этом устройстве.",
+                    isFromUser = false
+                )
                 _state.update { state ->
-                    val filtered = state.messages.filter { !it.isLoading }
                     state.copy(
-                        messages = filtered + ChatMessage(
-                            id = UUID.randomUUID().toString(),
-                            text = "🚫 AI-чат недоступен на этом устройстве.",
-                            isFromUser = false
-                        ),
+                        messages = state.messages.filter { !it.isLoading } + errorMsg,
                         isLoading = false
                     )
                 }
@@ -370,7 +380,7 @@ class ChatViewModel(
 
     private fun clearHistory() {
         viewModelScope.launch {
-            chatHistory.clear()
+            chatContext.clear()
             _state.update {
                 it.copy(
                     messages = listOf(
@@ -385,14 +395,27 @@ class ChatViewModel(
         }
     }
 
-    private fun buildPrompt(userMessage: String): String {
-        return """Ты — Арчи, весёлый AI-компаньон для изучения английского. Обращайся на "ты", дружелюбно, с лёгкой иронией. Давай короткие ответы (2-4 предложения). Если пользователь пишет по-английски — исправляй ошибки мягко. Если по-русски — переводи и объясняй.
+    private fun sanitizeResponse(raw: String): String {
+        var text = raw.trim()
 
-Пользователь: $userMessage
-Арчи:""".trimIndent()
+        // Cut at Gemma end-of-turn marker
+        text = text.substringBefore("<end_of_turn>").trim()
+
+        // Cut at common hallucination patterns where the model starts generating next turns
+        text = text.substringBefore("\nUser:").trim()
+        text = text.substringBefore("\nПользователь:").trim()
+        text = text.substringBefore("\nАрчи:").trim()
+        text = text.substringBefore("\n<start_of_turn>").trim()
+        text = text.substringBefore("\nmodel\n").trim()
+
+        // Remove any accidental prompt leakage
+        text = text.replace("<start_of_turn>model", "").trim()
+
+        return text.ifBlank { "Хм, я что-то запутался... 🤔" }
     }
 
     companion object {
         private const val TAG = "ChatViewModel"
+        private const val SYSTEM_PROMPT = "You are Archie, a cheerful AI companion for learning English. Speak in a friendly, slightly ironic tone. Keep answers very short (2-4 sentences). If the user writes in English, gently correct mistakes. If in Russian, translate to English and explain briefly."
     }
 }

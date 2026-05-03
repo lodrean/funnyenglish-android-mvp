@@ -133,6 +133,9 @@ fun AppNavigation() {
             composable(BottomNavItem.Profile.route) {
                 ProfileScreen()
             }
+            composable("games") {
+                GamesScreen()
+            }
         }
     }
 }

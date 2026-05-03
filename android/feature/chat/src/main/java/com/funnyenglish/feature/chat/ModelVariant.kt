@@ -15,18 +15,20 @@ enum class ModelVariant(
     CPU(
         fileName = "gemma-2b-it-cpu-int4.bin",
         downloadUrl = "https://github.com/lodrean/funnyenglish-android-mvp/releases/download/model-v1.1/gemma-2b-it-cpu-int4.bin",
-        sizeLabel = "~2.5GB",
+        sizeLabel = "~1.3GB",
         displayName = "CPU"
     );
 
     companion object {
         /**
-         * Picks the best variant for this device:
-         * - GPU if OpenCL is available (faster, smaller)
-         * - CPU as fallback (works everywhere)
+         * Picks the best variant for this device.
+         *
+         * NOTE: Defaults to CPU to avoid native crashes caused by broken vendor
+         * OpenCL drivers (observed on OnePlus and some Samsung devices).
+         * GPU can still be selected explicitly by the user in the future.
          */
         fun autoSelect(): ModelVariant {
-            return if (GpuCapabilityChecker.hasGpuSupport()) GPU else CPU
+            return CPU
         }
     }
 }

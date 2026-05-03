@@ -43,7 +43,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     // MediaPipe LLM Inference
-    implementation("com.google.mediapipe:tasks-genai:0.10.14")
+    // Updated from 0.10.14 → 0.10.22 to fix known native crash (SIGSEGV)
+    // during CPU inference on some devices (see mediapipe-samples#434).
+    implementation("com.google.mediapipe:tasks-genai:0.10.22")
 
     // Play Asset Delivery
     implementation(libs.play.asset.delivery)

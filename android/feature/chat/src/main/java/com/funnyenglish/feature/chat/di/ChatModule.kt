@@ -1,5 +1,6 @@
 package com.funnyenglish.feature.chat.di
 
+import com.funnyenglish.feature.chat.ChatContextManager
 import com.funnyenglish.feature.chat.ChatHistoryRepository
 import com.funnyenglish.feature.chat.ChatViewModel
 import com.funnyenglish.feature.chat.LocalAiRepository
@@ -13,5 +14,6 @@ val chatModule = module {
     single { ModelPathResolver(get()) }
     single { ModelDownloader(get()) }
     single { ChatHistoryRepository(get()) }
+    single { ChatContextManager(get(), get()) }
     viewModel { ChatViewModel(get(), get(), get(), get(), get()) }
 }
