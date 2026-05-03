@@ -2,7 +2,7 @@ package com.funnyenglish.feature.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.funnyenglish.core.data.local.ThemeRepository
+import com.funnyenglish.core.domain.repository.ThemeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

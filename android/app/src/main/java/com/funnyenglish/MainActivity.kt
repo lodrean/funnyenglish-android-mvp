@@ -7,7 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.funnyenglish.core.data.local.ThemeRepository
+import com.funnyenglish.core.domain.repository.ThemeRepository
 import com.funnyenglish.core.designsystem.theme.FunnyEnglishTheme
 import org.koin.android.ext.android.getKoin
 
