@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>ComplexCondition:ModelDownloader.kt$ModelDownloader$responseCode == HttpURLConnection.HTTP_MOVED_TEMP || responseCode == HttpURLConnection.HTTP_MOVED_PERM || responseCode == HttpURLConnection.HTTP_SEE_OTHER || responseCode == HTTP_TEMPORARY_REDIRECT || responseCode == HTTP_PERMANENT_REDIRECT</ID>
+    <ID>CyclomaticComplexMethod:ModelDownloader.kt$ModelDownloader$suspend fun download( variant: ModelVariant = ModelVariant.autoSelect(), onProgress: (Float) -&gt; Unit, ): Result&lt;DownloadResult&gt;</ID>
+    <ID>LongMethod:ModelDownloader.kt$ModelDownloader$suspend fun download( variant: ModelVariant = ModelVariant.autoSelect(), onProgress: (Float) -&gt; Unit, ): Result&lt;DownloadResult&gt;</ID>
+    <ID>MagicNumber:HttpClientFactory.kt$HttpClientFactory$10000</ID>
+    <ID>MagicNumber:HttpClientFactory.kt$HttpClientFactory$15000</ID>
+    <ID>MagicNumber:LocalAiRepository.kt$LocalAiRepository$1024</ID>
+    <ID>MagicNumber:LocalAiRepository.kt$LocalAiRepository$1_200_000_000L</ID>
+    <ID>MagicNumber:LocalAiRepository.kt$LocalAiRepository$3</ID>
+    <ID>MagicNumber:ModelDownloader.kt$ModelDownloader$30_000</ID>
+    <ID>MaxLineLength:LocalAiRepository.kt$LocalAiRepository$"Model file appears incomplete (${file.length()} bytes, expected &gt;$minExpectedSize). Please re-download."</ID>
+    <ID>MaxLineLength:ModelDownloader.kt$ModelDownloader$"[${variant.displayName}] Resuming download from byte $startByte, temp exists: ${tempFile.exists()}"</ID>
+    <ID>MaxLineLength:ModelVariant.kt$ModelVariant.CPU$downloadUrl = "https://github.com/lodrean/funnyenglish-android-mvp/releases/download/model-v1.1/gemma-2b-it-cpu-int4.bin"</ID>
+    <ID>MaxLineLength:ModelVariant.kt$ModelVariant.GPU$downloadUrl = "https://github.com/lodrean/funnyenglish-android-mvp/releases/download/model-v1.0/gemma-2b-it-gpu-int4.bin"</ID>
+    <ID>ReturnCount:LocalAiRepository.kt$LocalAiRepository$fun initModel(modelPath: String): Result&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ModelPathResolver.kt$ModelPathResolver$fun resolveModelPath(): String?</ID>
+    <ID>ReturnCount:WordRepositoryImpl.kt$WordRepositoryImpl$override suspend fun search(word: String): Result&lt;Word, DataError&gt;</ID>
+    <ID>SwallowedException:LocalAiRepository.kt$LocalAiRepository$e: Exception</ID>
+    <ID>SwallowedException:ModelPathResolver.kt$ModelPathResolver$e: Exception</ID>
+    <ID>SwallowedException:WordRepositoryImpl.kt$WordRepositoryImpl$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:LocalAiRepository.kt$LocalAiRepository$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:LocalAiRepository.kt$LocalAiRepository$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ModelDownloader.kt$ModelDownloader$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ModelPathResolver.kt$ModelPathResolver$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:WordRepositoryImpl.kt$WordRepositoryImpl$e: Exception</ID>
+    <ID>TooGenericExceptionThrown:ModelDownloader.kt$ModelDownloader$throw Exception("Redirect without Location header")</ID>
+    <ID>TooGenericExceptionThrown:ModelDownloader.kt$ModelDownloader$throw Exception("Too many redirects")</ID>
+    <ID>UseCheckOrError:LocalAiRepository.kt$LocalAiRepository$throw IllegalStateException("Model not initialized")</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -1,177 +1,166 @@
-# Telegram Bot с играми в Telegram
+# FunnyEnglish — Full Stack Project
 
-Это Telegram-бот на Python с встроенными играми: Крестики-нолики (PvP и против бота), шахматы и другие команды.
+## Структура проекта
 
-**Файлы проекта**
-- [bot.py](bot.py) : главный скрипт бота с логикой всех игр
-- [requirements.txt](requirements.txt) : зависимости Python
-- [Dockerfile](Dockerfile) : сборка Docker образа
-- [docker-compose.yml](docker-compose.yml) : запуск в Docker
+```
+funnyenglish/
+├── tictactoe.cpp          # C++ консольная игра (Windows)
+├── tictactoe.exe          # Скомпилированный executable
+├── bot.py                 # Python Telegram-бот (Игры + AI чат)
+├── backend/               # Kotlin Spring Boot бэкенд + админ-панель
+│   ├── Dockerfile
+│   ├── build.gradle.kts
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── kotlin/...   # REST API, JPA, Security, Thymeleaf
+│   │   │   └── resources/   # application.yml, templates, static
+│   └── build/libs/...       # Готовый JAR
+├── android/               # Android-приложение (Jetpack Compose)
+├── docker-compose.yml     # Docker orchestration (bot + backend)
+├── requirements.txt       # Python зависимости
+└── README.md              # Этот файл
+```
 
-**Требования**
-- Python 3.8+ (для локального запуска)
-- Docker (опционально)
+---
 
-**Получить токен**
-1. Создайте бота через BotFather в Telegram и получите токен.
+## 1. C++ Tic-Tac-Toe (Windows)
 
-**Запуск локально (рекомендуется виртуальное окружение)**
+Консольная игра «Крестики-нолики» с тремя уровнями AI, цветным выводом и меню на русском.
 
-PowerShell (одноразово для текущей сессии):
+**Сборка (MSVC):**
+```cmd
+cl.exe tictactoe.cpp /EHsc /Fe:tictactoe.exe
+```
+
+**Запуск:**
+```cmd
+tictactoe.exe
+```
+
+---
+
+## 2. Telegram Bot (Python)
+
+Бот «Арчи» — игровой компаньон с AI-чатом (OpenAI GPT-3.5), крестики-нолики, шахматы.
+
+**Локальный запуск:**
 ```powershell
 $env:TELEGRAM_TOKEN = "<ВАШ_ТОКЕН>"
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
 pip install -r requirements.txt
 python bot.py
 ```
 
-cmd.exe (одноразово для текущей сессии):
-```cmd
-set TELEGRAM_TOKEN=<ВАШ_ТОКЕН>
-python -m venv .venv
-.\.venv\Scripts\activate.bat
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-python bot.py
-```
-
-Если хотите установить переменную окружения глобально (PowerShell):
-```powershell
-setx TELEGRAM_TOKEN "<ВАШ_ТОКЕН>"
-```
-(после `setx` откройте новый терминал)
-
-**Примечания**
-- Для развёртывания на сервере можно использовать процессы/службы (Windows Service, NSSM) или контейнер.
-- Токен храните в безопасности — не коммитьте его в репозиторий.
-
-## Запуск в Docker
-
-Если установлен Docker, можно запустить бота в контейнере:
-
-**Способ 1: docker run (быстрый)**
+**Docker:**
 ```bash
-docker build -t tictactoe-bot .
-docker run -e TELEGRAM_TOKEN="8538430573:AAEwnoP95nZXUYE8sqUJrAvJU5oE0Pn3zc4" tictactoe-bot
+docker-compose up -d bot
 ```
 
-**Способ 2: docker-compose (удобнее)**
+---
 
-Создайте файл `.env` в папке проекта:
-```
-TELEGRAM_TOKEN=8538430573:AAEwnoP95nZXUYE8sqUJrAvJU5oE0Pn3zc4
-```
+## 3. Backend (Kotlin Spring Boot)
 
-Затем:
+REST API + админ-панель для управления пользователями, играми и чатом.
+
+**Стек:**
+- Spring Boot 3.2 + Kotlin 1.9
+- Spring Data JPA (H2 in-memory)
+- Spring Security (Form-based auth)
+- Thymeleaf (админ-панель)
+- WebSocket (ready for real-time)
+
+**API Endpoints:**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/users` | Создать/обновить пользователя |
+| GET | `/api/v1/users` | Список пользователей |
+| GET | `/api/v1/users/{telegramId}` | Пользователь по Telegram ID |
+| POST | `/api/v1/games` | Создать игровую сессию |
+| GET | `/api/v1/games` | Все игры |
+| GET | `/api/v1/games/active` | Активные игры |
+| POST | `/api/v1/games/move` | Сделать ход |
+| POST | `/api/v1/games/{id}/finish` | Завершить игру |
+| POST | `/api/v1/chat/messages` | Отправить сообщение |
+| GET | `/api/v1/chat/messages/recent` | Последние сообщения |
+
+**Админ-панель:**
+| URL | Описание | Логин / Пароль |
+|-----|----------|----------------|
+| `/admin/login` | Страница входа | |
+| `/admin/dashboard` | Dashboard со статистикой | admin / admin123 |
+| `/admin/users` | Список пользователей | |
+| `/admin/games` | Игры (все + активные) | |
+| `/admin/chat` | История сообщений | |
+| `/h2-console` | H2 Database Console | (без пароля) |
+
+**Сборка:**
 ```bash
+cd backend
+./gradlew bootJar
+```
+
+**Запуск:**
+```bash
+java -jar backend/build/libs/funnyenglish-backend-1.0.0.jar
+```
+
+**Docker:**
+```bash
+docker-compose up -d backend
+```
+
+Приложение стартует на `http://localhost:8080`.
+
+---
+
+## 4. Android (Jetpack Compose)
+
+Мобильное приложение для изучения английского.
+
+**Модули:**
+- `:app` — точка входа, навигация
+- `:core:{domain,data,presentation,design-system}` — общие слои
+- `:feature:{home,dictionary,quiz,chat,games,profile}` — фичи
+
+**Сборка:**
+```bash
+cd android
+./gradlew :app:assembleDebug
+```
+
+---
+
+## 5. Docker Compose (полный стек)
+
+```bash
+# Запуск всего стека
 docker-compose up -d
-```
 
-Для остановки:
-```bash
+# Только бэкенд + админка
+docker-compose up -d backend
+
+# Только бот
+docker-compose up -d bot
+
+# Остановка
 docker-compose down
 ```
 
-**Преимущества Docker:**
-- Бот работает в изолированном контейнере (независимо от ОС).
-- Легче развертить на VPS или облачных платформах.
-- Не нужна локальная виртуальная среда.
+---
 
-Если хотите — могу добавить: webhook-версию, автозапуск как службу, или интеграцию с вашим `tictactoe.cpp` (запуск .exe из бота).
+## Переменные окружения (.env)
 
-## Команды бота
-
-### Основные команды
-- `/start` — приветствие и справка
-- `/help` — полная справка по командам
-- `/ping` — проверка работы бота
-- `/echo <текст>` — повторить текст (эхо)
-
-### Крестики-нолики против бота
-- `/ttt` — начать новую игру против бота
-- `/board` — показать текущую доску
-- `/move <позиция>` — сделать ход
-- `/stop` — остановить игру
-
-**Форматы позиций:**
-- Цифры: `1`–`9` (стандартная раскладка)
-- Буквы: `A1`, `A2`, ... `C3`
-
-Пример:
-```
-/ttt          → Игра начата
-/move 5       → X в центр
-/move B1      → (ответ бота)
+```env
+TELEGRAM_TOKEN=your_telegram_bot_token
+OPENAI_API_KEY=your_openai_api_key
 ```
 
-### Крестики-нолики на двоих (в группе)
-- `/ttt_pvp` — первый игрок начинает игру
-- `/join_ttt` — второй игрок присоединяется
-- `/move_pvp <позиция>` — ход игрока
+---
 
-Пример (в групповом чате):
-```
-Игрок 1: /ttt_pvp
-Игрок 2: /join_ttt
-Игрок 1: /move_pvp 5
-Игрок 2: /move_pvp 1
-```
+## Быстрый старт
 
-### Шахматы (PvP)
-- `/chess` — первый игрок начинает партию
-- `/join_chess` — второй игрок присоединяется
-- `/move_chess <от> <к>` — ход (алгебраическая нотация)
-
-Пример:
-```
-Игрок 1: /chess
-Игрок 2: /join_chess
-Игрок 1: /move_chess e2 e4
-Игрок 2: /move_chess e7 e5
-```
-
-### Управление играми
-- `/stop` — завершить текущую игруДоска отображается с номерами пустых клеток 1..9, которые соответствуют позициям слева направо и сверху вниз.
-
-## Крестики-Нолики на двоих (PvP)
-
-Версия для двух игроков в одном чате/группе. Команды:
-
-- `/ttt_pvp` — начать новую игру (первый игрок)
-- `/join_ttt` — присоединиться ко второму игроку
-- `/move_pvp <позиция>` — сделать ход
-- `/stop` — остановить игру
-
-**Пример игры:**
-
-```
-Игрок 1: /ttt_pvp
-Бот: "Игрок 1 (X): ..., Ожидание игрока..."
-Игрок 2: /join_ttt
-Бот: "✅ Игрок 2 присоединился!"
-Игрок 1: /move_pvp 5
-Игрок 2: /move_pvp 1
-... и так далее
-```
-
-## Шахматы на двоих
-
-Базовая поддержка шахмат на двоих. Команды:
-
-- `/chess` — начать новую партию (первый игрок — белые)
-- `/join_chess` — присоединиться (второй игрок — чёрные)
-- `/move_chess <от> <к>` — сделать ход (алгебраическая нотация)
-- `/stop` — остановить партию
-
-**Пример:**
-
-```
-Игрок 1: /chess
-Игрок 2: /join_chess
-Игрок 1: /move_chess e2 e4
-Игрок 2: /move_chess e7 e5
-```
-
-**Примечание:** Текущая реализация использует упрощённую нотацию. Для полной поддержки шахмат нужно интегрировать библиотеку `python-chess`.
+1. **C++ игра:** `tictactoe.exe` (готов к запуску)
+2. **Бэкенд + админка:** `cd backend && ./gradlew bootJar && java -jar build/libs/*.jar`
+3. **Бот:** `pip install -r requirements.txt && python bot.py`
+4. **Android:** `cd android && ./gradlew :app:assembleDebug`

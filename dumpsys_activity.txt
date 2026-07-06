@@ -1,0 +1,3 @@
+Unknown command: com.funnyenglish.app
+Bad activity command, or no activities match: com.funnyenglish.app
+Use -h for help.

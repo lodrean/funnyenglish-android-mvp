@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат — FunnyEnglish Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="../../static/css/admin.css">
+</head>
+<body>
+    <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+    <div class="sidebar-overlay" onclick="document.querySelector('.sidebar').classList.remove('open')"></div>
+    <nav class="sidebar">
+        <div class="brand">🎮 FunnyEnglish</div>
+        <a href="/admin/dashboard" class="nav-link">📊 Dashboard</a>
+        <a href="/admin/users" class="nav-link">👥 Пользователи</a>
+        <a href="/admin/games" class="nav-link">🎲 Игры</a>
+        <a href="/admin/chat" class="nav-link active">💬 Чат</a>
+        <a href="/h2-console" class="nav-link" target="_blank">🗄️ H2 Console</a>
+        <form th:action="@{/admin/logout}" method="post" class="logout-form">
+            <button type="submit" class="logout-btn">🚪 Выйти</button>
+        </form>
+    </nav>
+
+    <main class="content">
+        <div class="breadcrumbs"><a href="/admin/dashboard">Dashboard</a> <span>/</span> <span>Чат</span></div>
+        <h1>Чат</h1>
+        <input type="search" class="search-input" placeholder="🔍 Поиск по сообщению или пользователю..." onkeyup="filterTable(this, 0)">
+        <div class="panel">
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Пользователь</th><th>Тип</th><th>Сообщение</th><th>Время</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="m : ${messages}">
+                        <td th:text="${m.id}">1</td>
+                        <td th:text="${m.userName} ?: 'User ' + ${m.userId}">User</td>
+                        <td><span class="badge" th:classappend="${m.isFromUser} ? 'badge-user' : 'badge-ai'" th:text="${m.isFromUser} ? '👤 Пользователь' : '🤖 AI'">Тип</span></td>
+                        <td th:text="${m.content}">Text</td>
+                        <td th:text="${m.sentAt}">—</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(messages)}">
+                        <td colspan="5" class="empty">Нет сообщений</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        function filterTable(input, colIdx) {
+            const val = input.value.toLowerCase();
+            document.querySelectorAll('tbody tr').forEach(row => {
+                if (!row.querySelector('td')) return;
+                const txt = row.textContent.toLowerCase();
+                row.style.display = txt.includes(val) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

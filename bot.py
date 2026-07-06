@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-import os
-import logging
-import random
 import io
-from typing import Dict, List, Optional
-
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-
-# Image generation imports
-from PIL import Image, ImageDraw, ImageFont
+import logging
+import os
+import random
+from typing import Optional
 
 # AI integration
 import openai
+
+# Image generation imports
+from PIL import Image, ImageDraw, ImageFont
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, BotCommand, InputMediaPhoto
+from telegram.constants import ParseMode
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, CallbackQueryHandler, filters
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -36,30 +36,30 @@ AI_CHARACTER_PROMPT = """Ты — игровой бот по имени "Арч�
 Контекст: ты находишься в Telegram-боте, общаешься через чат."""
 
 # Store conversation history per user (optional, for context)
-AI_CONVERSATIONS: Dict[int, List[dict]] = {}
+AI_CONVERSATIONS: dict[int, list[dict]] = {}
 
 def get_ai_response(user_id: int, user_message: str) -> str:
     """Get AI response with character"""
     openai_api_key = os.environ.get("OPENAI_API_KEY")
     if not openai_api_key:
         return "🤖 AI временно недоступен (нет API ключа). Но я всё ещё могу сыграть с тобой в игры!"
-    
+
     try:
         client = openai.OpenAI(api_key=openai_api_key)
-        
+
         # Initialize conversation history for new users
         if user_id not in AI_CONVERSATIONS:
             AI_CONVERSATIONS[user_id] = [
                 {"role": "system", "content": AI_CHARACTER_PROMPT}
             ]
-        
+
         # Add user message
         AI_CONVERSATIONS[user_id].append({"role": "user", "content": user_message})
-        
+
         # Keep only last 10 messages to save tokens
         if len(AI_CONVERSATIONS[user_id]) > 11:
             AI_CONVERSATIONS[user_id] = [AI_CONVERSATIONS[user_id][0]] + AI_CONVERSATIONS[user_id][-10:]
-        
+
         # Call OpenAI API
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",  # или gpt-4 если есть доступ
@@ -67,14 +67,14 @@ def get_ai_response(user_id: int, user_message: str) -> str:
             max_tokens=150,
             temperature=0.8  # чуть выше креативности
         )
-        
+
         ai_message = response.choices[0].message.content
-        
+
         # Add AI response to history
         AI_CONVERSATIONS[user_id].append({"role": "assistant", "content": ai_message})
-        
+
         return ai_message
-        
+
     except Exception as e:
         logger.error(f"AI error: {e}")
         return "Ой, что-то я запутался... 🤔 Давай лучше сыграем? Напиши /ttt или /chess!"
@@ -86,13 +86,13 @@ def clear_ai_history(user_id: int):
 
 # --- Image Generation Utilities ---
 
-def create_ttt_image(board: List[str], highlight_pos: Optional[int] = None) -> bytes:
+def create_ttt_image(board: list[str], highlight_pos: int | None = None) -> bytes:
     """Generate TicTacToe board as PNG image"""
     size = 300
     cell_size = size // 3
     img = Image.new('RGB', (size, size), color='#1a1a2e')
     draw = ImageDraw.Draw(img)
-    
+
     # Draw grid lines
     line_color = '#16213e'
     line_width = 4
@@ -101,7 +101,7 @@ def create_ttt_image(board: List[str], highlight_pos: Optional[int] = None) -> b
         draw.line([(i * cell_size, 0), (i * cell_size, size)], fill=line_color, width=line_width)
         # Horizontal lines
         draw.line([(0, i * cell_size), (size, i * cell_size)], fill=line_color, width=line_width)
-    
+
     # Draw X and O
     padding = 20
     for i, cell in enumerate(board):
@@ -109,15 +109,15 @@ def create_ttt_image(board: List[str], highlight_pos: Optional[int] = None) -> b
         col = i % 3
         x = col * cell_size + cell_size // 2
         y = row * cell_size + cell_size // 2
-        
+
         # Highlight cell if needed
         if highlight_pos == i:
             draw.rectangle(
-                [(col * cell_size + 2, row * cell_size + 2), 
+                [(col * cell_size + 2, row * cell_size + 2),
                  ((col + 1) * cell_size - 2, (row + 1) * cell_size - 2)],
                 fill='#0f3460'
             )
-        
+
         if cell == 'X':
             # Draw X in red
             draw.line([(x - cell_size//2 + padding, y - cell_size//2 + padding),
@@ -131,7 +131,7 @@ def create_ttt_image(board: List[str], highlight_pos: Optional[int] = None) -> b
             draw.ellipse([(x - cell_size//2 + padding, y - cell_size//2 + padding),
                          (x + cell_size//2 - padding, y + cell_size//2 - padding)],
                         outline='#00d9ff', width=6)
-    
+
     # Save to bytes
     buf = io.BytesIO()
     img.save(buf, format='PNG')
@@ -139,31 +139,45 @@ def create_ttt_image(board: List[str], highlight_pos: Optional[int] = None) -> b
     return buf.getvalue()
 
 
+CHESS_UNICODE_PIECES = {
+    'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+    'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
+}
+
+
 def create_chess_image(chess_game: Optional['Chess'] = None) -> bytes:
-    """Generate Chess board as PNG image with coordinates"""
+    """Generate Chess board as PNG image with coordinates and Unicode pieces"""
     # Board size + margin for coordinates
     board_size = 400
     margin = 30  # Space for coordinates
     total_size = board_size + 2 * margin
     cell_size = board_size // 8
-    
+
     # Colors
     bg_color = '#2c3e50'
     light_color = '#eeeed2'
     dark_color = '#769656'
     coord_color = '#ecf0f1'
-    
+
     img = Image.new('RGB', (total_size, total_size), color=bg_color)
     draw = ImageDraw.Draw(img)
-    
-    # Try to use fonts
+
+    # Try to use fonts with Unicode chess symbols support
     try:
-        piece_font = ImageFont.truetype("arial.ttf", cell_size // 2)
+        piece_font = ImageFont.truetype("seguisym.ttf", cell_size // 2)
+    except:
+        try:
+            piece_font = ImageFont.truetype("segoeuisymbol.ttf", cell_size // 2)
+        except:
+            try:
+                piece_font = ImageFont.truetype("arial.ttf", cell_size // 2)
+            except:
+                piece_font = ImageFont.load_default()
+    try:
         coord_font = ImageFont.truetype("arial.ttf", 16)
     except:
-        piece_font = ImageFont.load_default()
         coord_font = ImageFont.load_default()
-    
+
     # Get board state (use provided game or default initial position)
     if chess_game:
         board = chess_game.board
@@ -178,7 +192,7 @@ def create_chess_image(chess_game: Optional['Chess'] = None) -> bytes:
             ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
             ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'],
         ]
-    
+
     # Draw board squares
     for row in range(8):
         for col in range(8):
@@ -188,11 +202,11 @@ def create_chess_image(chess_game: Optional['Chess'] = None) -> bytes:
             x2 = x1 + cell_size
             y2 = y1 + cell_size
             draw.rectangle([(x1, y1), (x2, y2)], fill=color)
-    
+
     # Draw coordinates
     files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
     ranks = ['8', '7', '6', '5', '4', '3', '2', '1']
-    
+
     # File labels (a-h) - bottom
     for col in range(8):
         x = margin + col * cell_size + cell_size // 2
@@ -200,7 +214,7 @@ def create_chess_image(chess_game: Optional['Chess'] = None) -> bytes:
         bbox = draw.textbbox((0, 0), files[col], font=coord_font)
         text_width = bbox[2] - bbox[0]
         draw.text((x - text_width // 2, y), files[col], fill=coord_color, font=coord_font)
-    
+
     # File labels (a-h) - top
     for col in range(8):
         x = margin + col * cell_size + cell_size // 2
@@ -208,7 +222,7 @@ def create_chess_image(chess_game: Optional['Chess'] = None) -> bytes:
         bbox = draw.textbbox((0, 0), files[col], font=coord_font)
         text_width = bbox[2] - bbox[0]
         draw.text((x - text_width // 2, y), files[col], fill=coord_color, font=coord_font)
-    
+
     # Rank labels (1-8) - left
     for row in range(8):
         x = 8
@@ -216,7 +230,7 @@ def create_chess_image(chess_game: Optional['Chess'] = None) -> bytes:
         bbox = draw.textbbox((0, 0), ranks[row], font=coord_font)
         text_height = bbox[3] - bbox[1]
         draw.text((x, y), ranks[row], fill=coord_color, font=coord_font)
-    
+
     # Rank labels (1-8) - right
     for row in range(8):
         x = total_size - margin + 8
@@ -224,7 +238,7 @@ def create_chess_image(chess_game: Optional['Chess'] = None) -> bytes:
         bbox = draw.textbbox((0, 0), ranks[row], font=coord_font)
         text_width = bbox[2] - bbox[0]
         draw.text((x - text_width, y), ranks[row], fill=coord_color, font=coord_font)
-    
+
     # Draw pieces with letter notation
     for row in range(8):
         for col in range(8):
@@ -232,17 +246,17 @@ def create_chess_image(chess_game: Optional['Chess'] = None) -> bytes:
             if piece:
                 x = margin + col * cell_size + cell_size // 2
                 y = margin + row * cell_size + cell_size // 2
-                
-                # Use letter notation (R, N, B, Q, K, P)
-                piece_char = piece.upper()
-                
+
+                # Use Unicode chess symbols (with fallback to letter notation)
+                piece_char = CHESS_UNICODE_PIECES.get(piece, piece.upper())
+
                 # Center text
                 bbox = draw.textbbox((0, 0), piece_char, font=piece_font)
                 text_width = bbox[2] - bbox[0]
                 text_height = bbox[3] - bbox[1]
                 text_x = x - text_width // 2
                 text_y = y - text_height // 2
-                
+
                 # Determine colors
                 is_white = piece.isupper()
                 if is_white:
@@ -251,7 +265,7 @@ def create_chess_image(chess_game: Optional['Chess'] = None) -> bytes:
                 else:
                     main_color = '#1a1a1a'
                     outline_color = '#ffffff'
-                
+
                 # Draw outline/shadow for better visibility
                 outline_offset = 1
                 for dx in [-outline_offset, 0, outline_offset]:
@@ -263,7 +277,7 @@ def create_chess_image(chess_game: Optional['Chess'] = None) -> bytes:
                                 fill=outline_color,
                                 font=piece_font
                             )
-                
+
                 # Draw main piece
                 draw.text(
                     (text_x, text_y),
@@ -271,7 +285,7 @@ def create_chess_image(chess_game: Optional['Chess'] = None) -> bytes:
                     fill=main_color,
                     font=piece_font
                 )
-    
+
     buf = io.BytesIO()
     img.save(buf, format='PNG')
     buf.seek(0)
@@ -282,31 +296,34 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_name = update.effective_user.first_name or "друг"
     await update.message.reply_text(
         f"Привет, {user_name}! 👋\n\n"
-        "Я Арчи — твой игровой компаньон с характером! 🎮\n\n"
+        "Я *Арчи* — твой игровой компаньон с характером! 🎮\n\n"
         "Я умею:\n"
         "🗣️ *Болтать* — просто напиши мне что угодно\n"
         "❌⭕ *Крестики-нолики* — /ttt\n"
         "♟️ *Шахматы* — /chess\n\n"
         "Быстрый старт:\n"
         "• /ttt — играть со мной\n"
-        "• /ttt_pvp — играть с другом\n"
+        "• /ttt\\_pvp — играть с другом\n"
         "• /help — все команды\n\n"
-        "Давай поболтаем или сыграем? 😏"
+        "Давай поболтаем или сыграем? 😏",
+        parse_mode=ParseMode.MARKDOWN_V2,
+        reply_markup=REPLY_KEYBOARD
     )
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "**🎮 Доступные команды:**\n"
+        "*🎮 Доступные команды:*\n"
         "/start — приветствие\n"
         "/help — справка\n"
         "/ping — проверка\n"
         "/reset — сбросить память AI\n\n"
-        "**Крестики-Нолики:**\n"
-        "/ttt — игра с ботом\n"
-        "/ttt_pvp — игра на двоих (в группе)\n\n"
-        "**Шахматы:**\n"
+        "*Крестики-Нолики:*\n"
+        "/ttt — игра с ботом (инлайн-кнопки)\n"
+        "/ttt\\_pvp — игра на двоих (в группе)\n\n"
+        "*Шахматы:*\n"
         "/chess — начать партию на двоих\n\n"
-        "💡 Просто напиши мне сообщение — я отвечу как настоящий собеседник!"
+        "💡 Просто напиши мне сообщение — я отвечу как настоящий собеседник!",
+        parse_mode=ParseMode.MARKDOWN_V2
     )
 
 async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -321,10 +338,10 @@ async def echo_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message and update.message.text:
         user_id = update.effective_user.id
         user_message = update.message.text
-        
+
         # Show typing indicator
         await update.message.chat.send_action(action="typing")
-        
+
         # Get AI response
         ai_response = get_ai_response(user_id, user_message)
         await update.message.reply_text(ai_response)
@@ -341,14 +358,14 @@ async def reset_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
 class TicTacToe:
     def __init__(self):
         # board: list of 9 cells, each ' ' or 'X' or 'O'
-        self.board: List[str] = [" "] * 9
+        self.board: list[str] = [" "] * 9
         self.current = "X"  # player always X, bot O
 
     def reset(self):
         self.board = [" "] * 9
         self.current = "X"
 
-    def pos_from_str(self, s: str) -> Optional[int]:
+    def pos_from_str(self, s: str) -> int | None:
         s = s.strip().upper()
         # allow 1-9
         if s.isdigit():
@@ -362,7 +379,7 @@ class TicTacToe:
             return row * 3 + col
         return None
 
-    def valid_moves(self) -> List[int]:
+    def valid_moves(self) -> list[int]:
         return [i for i, v in enumerate(self.board) if v == " "]
 
     def make_move(self, idx: int, mark: str) -> bool:
@@ -372,7 +389,7 @@ class TicTacToe:
             return True
         return False
 
-    def check_winner(self) -> Optional[str]:
+    def check_winner(self) -> str | None:
         wins = [
             (0, 1, 2), (3, 4, 5), (6, 7, 8),
             (0, 3, 6), (1, 4, 7), (2, 5, 8),
@@ -434,13 +451,13 @@ class TicTacToe:
 # --- TicTacToe PvP (two players) ---
 class TicTacToePvP:
     def __init__(self, player1: str, player2: str):
-        self.board: List[str] = [" "] * 9
+        self.board: list[str] = [" "] * 9
         self.current_player = "X"
         self.player_x = player1  # User ID or name
         self.player_o = player2  # User ID or name
         self.moves_count = 0
 
-    def pos_from_str(self, s: str) -> Optional[int]:
+    def pos_from_str(self, s: str) -> int | None:
         s = s.strip().upper()
         if s.isdigit():
             n = int(s)
@@ -460,7 +477,7 @@ class TicTacToePvP:
             return True
         return False
 
-    def check_winner(self) -> Optional[str]:
+    def check_winner(self) -> str | None:
         wins = [
             (0, 1, 2), (3, 4, 5), (6, 7, 8),
             (0, 3, 6), (1, 4, 7), (2, 5, 8),
@@ -497,7 +514,7 @@ class Chess:
         'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
         'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
     }
-    
+
     # Letter notation for pieces (standard chess notation)
     PIECES_LETTERS = {
         'r': 'r', 'n': 'n', 'b': 'b', 'q': 'q', 'k': 'k', 'p': 'p',
@@ -508,7 +525,7 @@ class Chess:
         self.player_white = player1
         self.player_black = player2
         self.current = "white"
-        self.moves_history: List[str] = []
+        self.moves_history: list[str] = []
         self.move_count = 0
         # Initialize board with starting position
         # Board is 8x8, row 0 is rank 8 (black's back rank), row 7 is rank 1 (white's back rank)
@@ -542,23 +559,23 @@ class Chess:
         move_clean = move.replace(' ', '').lower()
         if len(move_clean) < 4:
             return False, "Неверный формат хода. Используйте: e2 e4 или e2e4"
-        
+
         from_sq = move_clean[:2]
         to_sq = move_clean[2:4]
-        
+
         from_pos = self.parse_square(from_sq)
         to_pos = self.parse_square(to_sq)
-        
+
         if from_pos is None or to_pos is None:
             return False, "Неверные координаты. Используйте формат a1-h8"
-        
+
         from_row, from_col = from_pos
         to_row, to_col = to_pos
-        
+
         piece = self.board[from_row][from_col]
         if piece is None:
             return False, f"На {from_sq} нет фигуры"
-        
+
         # Check if it's the correct player's turn
         is_white_piece = piece.isupper()
         if (self.current == "white" and not is_white_piece) or \
@@ -566,14 +583,14 @@ class Chess:
             current_player = "Белые" if self.current == "white" else "Чёрные"
             piece_color = "белая" if is_white_piece else "чёрная"
             return False, f"Сейчас ход {current_player}, а фигура {piece_color}"
-        
+
         # Check if destination has own piece (can't capture own piece)
         target_piece = self.board[to_row][to_col]
         if target_piece:
             target_is_white = target_piece.isupper()
             if is_white_piece == target_is_white:
                 return False, "Нельзя срубить свою фигуру"
-        
+
         # Simple validation: pawns move differently than other pieces
         piece_type = piece.upper()
         if piece_type == 'P':
@@ -581,7 +598,7 @@ class Chess:
             direction = -1 if is_white_piece else 1  # White moves up (decreasing row), black down
             row_diff = to_row - from_row
             col_diff = abs(to_col - from_col)
-            
+
             # Forward move (no capture)
             if col_diff == 0:
                 if target_piece is not None:
@@ -606,11 +623,11 @@ class Chess:
                     return False, "Пешка бьёт только по диагонали на занятое поле"
             else:
                 return False, "Пешка ходит вперёд или бьёт по диагонали на 1 клетку"
-        
+
         # Execute move
         self.board[to_row][to_col] = piece
         self.board[from_row][from_col] = None
-        
+
         self.moves_history.append(f"{from_sq}{to_sq}")
         self.current = "black" if self.current == "white" else "white"
         self.move_count += 1
@@ -640,7 +657,120 @@ class Chess:
 
 
 # store games per chat (type: ttt, ttt_pvp, chess)
-GAMES: Dict[int, dict] = {}
+GAMES: dict[int, dict] = {}
+
+
+# --- Inline keyboard helpers ---
+
+def get_ttt_keyboard(board: list[str]) -> InlineKeyboardMarkup:
+    """Build 3×3 inline keyboard for TicTacToe."""
+    keyboard = []
+    for row in range(3):
+        row_buttons = []
+        for col in range(3):
+            idx = row * 3 + col
+            cell = board[idx]
+            if cell == ' ':
+                row_buttons.append(InlineKeyboardButton(str(idx + 1), callback_data=f"ttt_move_{idx}"))
+            elif cell == 'X':
+                row_buttons.append(InlineKeyboardButton("❌", callback_data=f"ttt_nop_{idx}"))
+            else:
+                row_buttons.append(InlineKeyboardButton("⭕", callback_data=f"ttt_nop_{idx}"))
+        keyboard.append(row_buttons)
+    return InlineKeyboardMarkup(keyboard)
+
+
+REPLY_KEYBOARD = ReplyKeyboardMarkup(
+    [
+        [KeyboardButton("🎮 Игры"), KeyboardButton("💬 Чат")],
+        [KeyboardButton("📚 Словарь"), KeyboardButton("❓ Помощь")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=False
+)
+
+
+async def ttt_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handle inline keyboard callbacks for TicTacToe."""
+    query = update.callback_query
+    await query.answer()
+    data = query.data
+    chat_id = update.effective_chat.id
+
+    if data.startswith("ttt_nop_"):
+        return  # no-op on occupied cells
+
+    if not data.startswith("ttt_move_"):
+        return
+
+    idx = int(data.split("_")[-1])
+    game_info = GAMES.get(chat_id)
+    if not game_info or game_info.get("type") != "ttt":
+        await query.edit_message_caption(caption="Игра завершена или не найдена.")
+        return
+
+    game = game_info["game"]
+    if not game.make_move(idx, "X"):
+        await query.answer("Эта клетка уже занята!", show_alert=True)
+        return
+
+    winner = game.check_winner()
+    if winner == "X":
+        img_data = create_ttt_image(game.board)
+        await query.edit_message_media(
+            media=InputMediaPhoto(media=img_data, caption="🎉 Вы победили!"),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Новая игра", callback_data="ttt_new")]])
+        )
+        del GAMES[chat_id]
+        return
+    if winner == "draw":
+        img_data = create_ttt_image(game.board)
+        await query.edit_message_media(
+            media=InputMediaPhoto(media=img_data, caption="Ничья!"),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Новая игра", callback_data="ttt_new")]])
+        )
+        del GAMES[chat_id]
+        return
+
+    # Bot move
+    bot_idx = game.bot_move()
+    winner = game.check_winner()
+    if winner == "O":
+        img_data = create_ttt_image(game.board)
+        await query.edit_message_media(
+            media=InputMediaPhoto(media=img_data, caption=f"🤖 Бот ходит на {bot_idx + 1} и побеждает!"),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Новая игра", callback_data="ttt_new")]])
+        )
+        del GAMES[chat_id]
+        return
+    if winner == "draw":
+        img_data = create_ttt_image(game.board)
+        await query.edit_message_media(
+            media=InputMediaPhoto(media=img_data, caption="Ничья!"),
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Новая игра", callback_data="ttt_new")]])
+        )
+        del GAMES[chat_id]
+        return
+
+    img_data = create_ttt_image(game.board)
+    await query.edit_message_media(
+        media=InputMediaPhoto(media=img_data, caption="Ваш ход!"),
+        reply_markup=get_ttt_keyboard(game.board)
+    )
+
+
+async def ttt_new_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Start new game from inline button."""
+    query = update.callback_query
+    await query.answer()
+    chat_id = update.effective_chat.id
+    game = TicTacToe()
+    GAMES[chat_id] = {"type": "ttt", "game": game}
+    img_data = create_ttt_image(game.board)
+    await query.edit_message_media(
+        media=InputMediaPhoto(media=img_data, caption="Новая игра! Вы — X."),
+        reply_markup=get_ttt_keyboard(game.board)
+    )
 
 
 async def ttt_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -655,12 +785,12 @@ async def ttt_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     game = TicTacToe()
     GAMES[chat_id] = {"type": "ttt", "game": game}
-    
-    # Generate and send image
+
     img_data = create_ttt_image(game.board)
     await update.message.reply_photo(
         photo=img_data,
-        caption="Новая игра Крестики-Нолики (Вы — X).\nХоды: /move <позиция> — где позиция 1-9 или A1..C3.\nПример: /move 5 или /move B2"
+        caption="Новая игра Крестики-Нолики (Вы — X). Выбирайте клетку:",
+        reply_markup=get_ttt_keyboard(game.board)
     )
 
 
@@ -671,10 +801,13 @@ async def ttt_board(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Игра не запущена. Используйте /ttt чтобы начать.")
         return
     game = game_info["game"]
-    
-    # Generate and send image
+
     img_data = create_ttt_image(game.board)
-    await update.message.reply_photo(photo=img_data, caption="Текущая доска:")
+    await update.message.reply_photo(
+        photo=img_data,
+        caption="Текущая доска:",
+        reply_markup=get_ttt_keyboard(game.board)
+    )
 
 
 async def ttt_stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -708,12 +841,20 @@ async def ttt_move(update: Update, context: ContextTypes.DEFAULT_TYPE):
     winner = game.check_winner()
     if winner == "X":
         img_data = create_ttt_image(game.board)
-        await update.message.reply_photo(photo=img_data, caption="🎉 Вы победили!")
+        await update.message.reply_photo(
+            photo=img_data,
+            caption="🎉 Вы победили!",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Новая игра", callback_data="ttt_new")]])
+        )
         del GAMES[chat_id]
         return
     if winner == "draw":
         img_data = create_ttt_image(game.board)
-        await update.message.reply_photo(photo=img_data, caption="Ничья!")
+        await update.message.reply_photo(
+            photo=img_data,
+            caption="Ничья!",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Новая игра", callback_data="ttt_new")]])
+        )
         del GAMES[chat_id]
         return
 
@@ -722,31 +863,43 @@ async def ttt_move(update: Update, context: ContextTypes.DEFAULT_TYPE):
     winner = game.check_winner()
     if winner == "O":
         img_data = create_ttt_image(game.board)
-        await update.message.reply_photo(photo=img_data, caption=f"🤖 Бот ходит на {bot_idx+1} и побеждает!")
+        await update.message.reply_photo(
+            photo=img_data,
+            caption=f"🤖 Бот ходит на {bot_idx+1} и побеждает!",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Новая игра", callback_data="ttt_new")]])
+        )
         del GAMES[chat_id]
         return
     if winner == "draw":
         img_data = create_ttt_image(game.board)
-        await update.message.reply_photo(photo=img_data, caption="Ничья!")
+        await update.message.reply_photo(
+            photo=img_data,
+            caption="Ничья!",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Новая игра", callback_data="ttt_new")]])
+        )
         del GAMES[chat_id]
         return
 
     img_data = create_ttt_image(game.board)
-    await update.message.reply_photo(photo=img_data, caption="Ход принят. Ваш ход!")
+    await update.message.reply_photo(
+        photo=img_data,
+        caption="Ход принят. Ваш ход!",
+        reply_markup=get_ttt_keyboard(game.board)
+    )
 
 
 async def ttt_pvp_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Start two-player TicTacToe"""
     chat_id = update.effective_chat.id
     user_name = update.effective_user.first_name or f"Игрок {update.effective_user.id}"
-    
+
     if chat_id in GAMES:
         await update.message.reply_text("В этом чате уже идёт игра! Завершите её командой /stop")
         return
-    
+
     game = TicTacToePvP(user_name, "Ожидание игрока...")
     GAMES[chat_id] = {"type": "ttt_pvp", "game": game, "players": [update.effective_user.id]}
-    
+
     img_data = create_ttt_image(game.board)
     await update.message.reply_photo(
         photo=img_data,
@@ -760,22 +913,22 @@ async def ttt_pvp_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def ttt_pvp_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Join two-player TicTacToe"""
     chat_id = update.effective_chat.id
-    
+
     if chat_id not in GAMES or GAMES[chat_id]["type"] != "ttt_pvp":
         await update.message.reply_text("Нет активной PvP игры. Начните с /ttt_pvp")
         return
-    
+
     game_info = GAMES[chat_id]
     game = game_info["game"]
-    
+
     if len(game_info["players"]) >= 2:
         await update.message.reply_text("Оба игрока уже в игре!")
         return
-    
+
     player2_name = update.effective_user.first_name or f"Игрок {update.effective_user.id}"
     game.player_o = player2_name
     game_info["players"].append(update.effective_user.id)
-    
+
     img_data = create_ttt_image(game.board)
     await update.message.reply_photo(
         photo=img_data,
@@ -789,31 +942,31 @@ async def ttt_pvp_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def ttt_pvp_move(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Make move in PvP TicTacToe"""
     chat_id = update.effective_chat.id
-    
+
     if chat_id not in GAMES or GAMES[chat_id]["type"] != "ttt_pvp":
         await update.message.reply_text("Нет активной PvP игры.")
         return
-    
+
     game_info = GAMES[chat_id]
     game = game_info["game"]
-    
+
     if len(game_info["players"]) < 2:
         await update.message.reply_text("Ждём второго игрока!")
         return
-    
+
     if not context.args:
         await update.message.reply_text("Укажите позицию: /move_pvp <1-9|A1-C3>")
         return
-    
+
     idx = game.pos_from_str(context.args[0])
     if idx is None:
         await update.message.reply_text("Неверная позиция.")
         return
-    
+
     if not game.make_move(idx):
         await update.message.reply_text("Клетка занята!")
         return
-    
+
     winner = game.check_winner()
     if winner == "X":
         img_data = create_ttt_image(game.board)
@@ -830,7 +983,7 @@ async def ttt_pvp_move(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_photo(photo=img_data, caption="Ничья!")
         del GAMES[chat_id]
         return
-    
+
     img_data = create_ttt_image(game.board)
     await update.message.reply_photo(photo=img_data, caption=game.get_status())
 
@@ -841,16 +994,16 @@ async def chess_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = update.effective_chat.id
         user_name = update.effective_user.first_name or f"Игрок {update.effective_user.id}"
         logger.info(f"chess_start: chat_id={chat_id}, user={user_name}")
-        
+
         if chat_id in GAMES:
             if update.message:
                 await update.message.reply_text("В этом чате уже идёт игра!")
             return
-        
+
         game = Chess(user_name, "Ожидание игрока...")
         GAMES[chat_id] = {"type": "chess", "game": game, "players": [update.effective_user.id]}
         logger.info(f"chess_start: game created for {chat_id}")
-        
+
         # Generate and send chess board image
         if update.message:
             img_data = create_chess_image(game)
@@ -871,18 +1024,18 @@ async def chess_join(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         chat_id = update.effective_chat.id
         logger.info(f"chess_join: chat_id={chat_id}")
-        
+
         if chat_id not in GAMES or GAMES[chat_id]["type"] != "chess":
             if update.message:
                 await update.message.reply_text("Нет активной шахматной партии. Начните с /chess")
             return
-        
+
         game_info = GAMES[chat_id]
         game_info["players"].append(update.effective_user.id)
         game = game_info["game"]
         player2_name = update.effective_user.first_name or f"Игрок {update.effective_user.id}"
         game.player_black = player2_name
-        
+
         if update.message:
             img_data = create_chess_image(game)
             await update.message.reply_photo(
@@ -903,19 +1056,19 @@ async def chess_move(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         chat_id = update.effective_chat.id
         logger.info(f"chess_move: chat_id={chat_id}, args={context.args}")
-        
+
         if chat_id not in GAMES or GAMES[chat_id]["type"] != "chess":
             await update.message.reply_text("Нет активной шахматной партии.")
             return
-        
+
         if not context.args or len(context.args) < 2:
             await update.message.reply_text("Формат: /move_chess <от> <к> (например: e2 e4)")
             return
-        
+
         move = f"{context.args[0]}{context.args[1]}"
         game_info = GAMES[chat_id]
         game = game_info["game"]
-        
+
         # Validate and make move
         success, error_msg = game.make_move(move)
         if success:
@@ -948,6 +1101,27 @@ async def stop_game(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Нет активной игры.")
 
 
+async def reply_keyboard_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    if text == "🎮 Игры":
+        await update.message.reply_text(
+            "🎮 *Игры:*\n/ttt — Крестики-нолики\n/ttt_pvp — на двоих\n/chess — Шахматы",
+            parse_mode=ParseMode.MARKDOWN_V2
+        )
+    elif text == "💬 Чат":
+        await update.message.reply_text(
+            "💬 Просто напиши мне что угодно — я отвечу! Или сбрось память: /reset"
+        )
+    elif text == "📚 Словарь":
+        await update.message.reply_text(
+            "📚 Словарь пока только в мобильном приложении. Скачайте FunnyEnglish App!"
+        )
+    elif text == "❓ Помощь":
+        await help_command(update, context)
+    else:
+        await echo_text(update, context)
+
+
 def main() -> None:
     token = os.environ.get("TELEGRAM_TOKEN")
     if not token:
@@ -956,6 +1130,18 @@ def main() -> None:
         return
 
     app = ApplicationBuilder().token(token).build()
+
+    # Set bot menu commands
+    commands = [
+        BotCommand("start", "Приветствие и меню"),
+        BotCommand("help", "Справка по командам"),
+        BotCommand("ttt", "Крестики-нолики с ботом"),
+        BotCommand("ttt_pvp", "Крестики-нолики на двоих"),
+        BotCommand("chess", "Шахматы на двоих"),
+        BotCommand("reset", "Сбросить память AI"),
+        BotCommand("stop", "Остановить игру"),
+    ]
+    app.bot.set_my_commands(commands)
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
@@ -972,7 +1158,11 @@ def main() -> None:
     app.add_handler(CommandHandler("join_chess", chess_join))
     app.add_handler(CommandHandler("move_chess", chess_move))
     app.add_handler(CommandHandler("stop", stop_game))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo_text))
+    # Inline keyboard callbacks
+    app.add_handler(CallbackQueryHandler(ttt_callback, pattern="^ttt_move_|^ttt_nop_"))
+    app.add_handler(CallbackQueryHandler(ttt_new_callback, pattern="^ttt_new$"))
+    # Reply keyboard and text messages
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, reply_keyboard_handler))
 
     logger.info("Запуск бота...")
     app.run_polling()

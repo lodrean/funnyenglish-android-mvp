@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Пользователи — FunnyEnglish Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="../../static/css/admin.css">
+</head>
+<body>
+    <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+    <div class="sidebar-overlay" onclick="document.querySelector('.sidebar').classList.remove('open')"></div>
+    <nav class="sidebar">
+        <div class="brand">🎮 FunnyEnglish</div>
+        <a href="/admin/dashboard" class="nav-link">📊 Dashboard</a>
+        <a href="/admin/users" class="nav-link active">👥 Пользователи</a>
+        <a href="/admin/games" class="nav-link">🎲 Игры</a>
+        <a href="/admin/chat" class="nav-link">💬 Чат</a>
+        <a href="/h2-console" class="nav-link" target="_blank">🗄️ H2 Console</a>
+        <form th:action="@{/admin/logout}" method="post" class="logout-form">
+            <button type="submit" class="logout-btn">🚪 Выйти</button>
+        </form>
+    </nav>
+
+    <main class="content">
+        <div class="breadcrumbs"><a href="/admin/dashboard">Dashboard</a> <span>/</span> <span>Пользователи</span></div>
+        <h1>Пользователи</h1>
+        <input type="search" class="search-input" placeholder="🔍 Поиск по имени или Telegram ID..." onkeyup="filterTable(this, 0)">
+        <div class="panel">
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Telegram ID</th><th>Username</th><th>Имя</th><th>Игры</th><th>Побед</th><th>Активен</th><th>Последняя активность</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${users}">
+                        <td th:text="${u.id}">1</td>
+                        <td th:text="${u.telegramId}">123</td>
+                        <td th:text="${u.username} ?: '—'">@user</td>
+                        <td th:text="${u.firstName} ?: '—'">Name</td>
+                        <td th:text="${u.gamesPlayed}">0</td>
+                        <td th:text="${u.gamesWon}">0</td>
+                        <td><span class="badge" th:classappend="${u.isActive} ? 'badge-active' : 'badge-inactive'" th:text="${u.isActive} ? '✅' : '❌'">✅</span></td>
+                        <td th:text="${u.lastActivityAt}">—</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(users)}">
+                        <td colspan="8" class="empty">Нет пользователей</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        function filterTable(input, colIdx) {
+            const val = input.value.toLowerCase();
+            document.querySelectorAll('tbody tr').forEach(row => {
+                if (!row.querySelector('td')) return;
+                const txt = row.textContent.toLowerCase();
+                row.style.display = txt.includes(val) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

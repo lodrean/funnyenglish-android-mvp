@@ -1,0 +1,19 @@
+Applications Graphics Acceleration Info:
+Uptime: 168440611 Realtime: 168440611
+
+** Graphics info for pid 15628 [com.funnyenglish.app] **
+GraphicBufferAllocator buffers:
+            Handle |         Size |     W (Stride) x H | Layers |   Format |      Usage | Requestor
+Total allocated by GraphicBufferAllocator (estimate): 0.00 KB
+Imported gralloc buffers:
+Total imported by gralloc: 0KiB
+
+Profile data in ms:
+
+View hierarchy:
+
+
+Total ViewRootImpl   : 0
+Total attached Views : 0
+Total RenderNode     : 0.00 kB (used) / 0.00 kB (capacity)
+

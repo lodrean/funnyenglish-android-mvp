@@ -32,15 +32,18 @@ class HomeViewModel : ViewModel() {
             HomeAction.OnDailyWordClick -> {
                 // Show word detail or copy to clipboard
             }
+            HomeAction.OnRefresh -> loadUserData()
         }
     }
 
     private fun loadUserData() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            _state.update { it.copy(isRefreshing = true) }
             // TODO: Load from DataStore/Repository
+            kotlinx.coroutines.delay(800) // Simulate network load for shimmer demo
             _state.update {
                 it.copy(
+                    isRefreshing = false,
                     isLoading = false,
                     streakDays = 3,
                     totalXp = 450,

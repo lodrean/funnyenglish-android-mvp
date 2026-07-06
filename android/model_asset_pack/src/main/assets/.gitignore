@@ -1,3 +1,4 @@
 # Ignore the large model binary
 gemma-2b-it-gpu-int4.bin
+gemma-2b-it-cpu-int4.bin
 *.bin

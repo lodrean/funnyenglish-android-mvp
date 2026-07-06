@@ -1,0 +1,83 @@
+[versions]
+agp = "9.1.1"
+kotlin = "2.2.10"
+coreKtx = "1.13.1"
+lifecycle = "2.8.2"
+activityCompose = "1.9.0"
+composeBom = "2024.06.00"
+navigation = "2.8.0"
+room = "2.7.1"
+koin = "3.5.6"
+koinCompose = "3.5.6"
+ktor = "2.3.11"
+kotlinxSerialization = "1.6.3"
+coil = "2.6.0"
+datastore = "1.1.1"
+playAssetDelivery = "2.2.2"
+tracer = "1.0.8"
+detekt = "1.23.6"
+ktlint = "12.1.0"
+junit5 = "5.10.2"
+turbine = "1.1.0"
+mockk = "1.13.11"
+coroutines = "1.8.1"
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-runtime = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+androidx-compose-navigation = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
+
+koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
+koin-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koinCompose" }
+
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+
+ktor-client-core = { group = "io.ktor", name = "ktor-client-core", version.ref = "ktor" }
+ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
+ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
+
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+
+coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+play-asset-delivery = { group = "com.google.android.play", name = "asset-delivery", version.ref = "playAssetDelivery" }
+play-asset-delivery-ktx = { group = "com.google.android.play", name = "asset-delivery-ktx", version.ref = "playAssetDelivery" }
+
+tracer-platform = { group = "ru.ok.tracer", name = "tracer-platform", version.ref = "tracer" }
+tracer-base = { group = "ru.ok.tracer", name = "tracer-base", version.ref = "tracer" }
+tracer-crash-report = { group = "ru.ok.tracer", name = "tracer-crash-report", version.ref = "tracer" }
+tracer-crash-report-native = { group = "ru.ok.tracer", name = "tracer-crash-report-native", version.ref = "tracer" }
+tracer-heap-dumps = { group = "ru.ok.tracer", name = "tracer-heap-dumps", version.ref = "tracer" }
+
+junit5 = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit5" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+ksp = { id = "com.google.devtools.ksp", version = "2.3.2" }

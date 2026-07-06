@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>ComplexCondition:ModelDownloader.kt$ModelDownloader$responseCode == HttpURLConnection.HTTP_MOVED_TEMP || responseCode == HttpURLConnection.HTTP_MOVED_PERM || responseCode == HttpURLConnection.HTTP_SEE_OTHER || responseCode == HTTP_TEMPORARY_REDIRECT || responseCode == HTTP_PERMANENT_REDIRECT</ID>
+    <ID>CyclomaticComplexMethod:ChatScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable private fun ChatContent( state: ChatState, snackbarHostState: SnackbarHostState, onAction: (ChatAction) -&gt; Unit )</ID>
+    <ID>CyclomaticComplexMethod:ModelDownloader.kt$ModelDownloader$suspend fun download( variant: ModelVariant = ModelVariant.autoSelect(), onProgress: (Float) -&gt; Unit ): Result&lt;DownloadResult&gt;</ID>
+    <ID>LongMethod:ChatScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable private fun ChatContent( state: ChatState, snackbarHostState: SnackbarHostState, onAction: (ChatAction) -&gt; Unit )</ID>
+    <ID>LongMethod:ChatViewModel.kt$ChatViewModel$private fun initModel(modelPath: String)</ID>
+    <ID>LongMethod:ChatViewModel.kt$ChatViewModel$private fun sendMessage()</ID>
+    <ID>LongMethod:ModelDownloader.kt$ModelDownloader$suspend fun download( variant: ModelVariant = ModelVariant.autoSelect(), onProgress: (Float) -&gt; Unit ): Result&lt;DownloadResult&gt;</ID>
+    <ID>MagicNumber:BatteryMonitor.kt$BatteryMonitor$100</ID>
+    <ID>MagicNumber:ChatViewModel.kt$ChatViewModel$100</ID>
+    <ID>MagicNumber:ChatViewModel.kt$ChatViewModel$1024</ID>
+    <ID>MagicNumber:ChatViewModel.kt$ChatViewModel$1024L</ID>
+    <ID>MagicNumber:ChatViewModel.kt$ChatViewModel$120_000</ID>
+    <ID>MagicNumber:ChatViewModel.kt$ChatViewModel$400</ID>
+    <ID>MagicNumber:LocalAiRepository.kt$LocalAiRepository$1024</ID>
+    <ID>MagicNumber:LocalAiRepository.kt$LocalAiRepository$1_200_000_000L</ID>
+    <ID>MagicNumber:LocalAiRepository.kt$LocalAiRepository$3</ID>
+    <ID>MagicNumber:ModelDownloader.kt$ModelDownloader$30_000</ID>
+    <ID>MaxLineLength:ChatScreen.kt$"Версия: ${variant.displayName} ${if (variant == ModelVariant.GPU) "(быстрее)" else "(совместимость)"}"</ID>
+    <ID>MaxLineLength:ChatViewModel.kt$ChatViewModel$error = "Ошибка загрузки: ${error.message}. Проверь подключение к интернету и попробуй снова."</ID>
+    <ID>MaxLineLength:ChatViewModel.kt$ChatViewModel$text = "Привет! Я Арчи 🤖\nЯ работаю прямо на твоём телефоне — без интернета!\n\nДля начала нужно загрузить AI-модель."</ID>
+    <ID>MaxLineLength:ChatViewModel.kt$ChatViewModel.Companion$private const val SYSTEM_PROMPT = "You are Archie, a cheerful AI companion for learning English. Speak in a friendly, slightly ironic tone. Keep answers very short (2-4 sentences). If the user writes in English, gently correct mistakes. If in Russian, translate to English and explain briefly."</ID>
+    <ID>MaxLineLength:GpuCapabilityChecker.kt$GpuCapabilityChecker$Log.d(TAG, if (found) "libOpenCL.so found — GPU likely supported" else "libOpenCL.so not found — GPU not supported")</ID>
+    <ID>MaxLineLength:LocalAiRepository.kt$LocalAiRepository$Exception("Model file appears incomplete (${file.length()} bytes, expected &gt;$minExpectedSize). Please re-download.")</ID>
+    <ID>MaxLineLength:ModelDownloader.kt$ModelDownloader$Log.d(TAG, "[${variant.displayName}] Resuming download from byte $startByte, temp exists: ${tempFile.exists()}")</ID>
+    <ID>MaxLineLength:ModelVariant.kt$ModelVariant.CPU$downloadUrl = "https://github.com/lodrean/funnyenglish-android-mvp/releases/download/model-v1.1/gemma-2b-it-cpu-int4.bin"</ID>
+    <ID>MaxLineLength:ModelVariant.kt$ModelVariant.GPU$downloadUrl = "https://github.com/lodrean/funnyenglish-android-mvp/releases/download/model-v1.0/gemma-2b-it-gpu-int4.bin"</ID>
+    <ID>NestedBlockDepth:ChatContextManager.kt$ChatContextManager$fun buildPrompt(systemPrompt: String, newUserMessage: String): String</ID>
+    <ID>ReturnCount:ChatContextManager.kt$ChatContextManager$private fun trimByChars(prompt: String, systemPrompt: String, newUserMessage: String): String</ID>
+    <ID>ReturnCount:ChatViewModel.kt$ChatViewModel$private fun sendMessage()</ID>
+    <ID>ReturnCount:LocalAiRepository.kt$LocalAiRepository$fun initModel(modelPath: String): Result&lt;Unit&gt;</ID>
+    <ID>ReturnCount:ModelPathResolver.kt$ModelPathResolver$fun resolveModelPath(): String?</ID>
+    <ID>SwallowedException:LocalAiRepository.kt$LocalAiRepository$e: Exception</ID>
+    <ID>SwallowedException:ModelPathResolver.kt$ModelPathResolver$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ChatContextManager.kt$ChatContextManager$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ChatViewModel.kt$ChatViewModel$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ChatViewModel.kt$ChatViewModel$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:LocalAiRepository.kt$LocalAiRepository$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:LocalAiRepository.kt$LocalAiRepository$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ModelDownloader.kt$ModelDownloader$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ModelPathResolver.kt$ModelPathResolver$e: Exception</ID>
+    <ID>TooGenericExceptionThrown:ModelDownloader.kt$ModelDownloader$throw Exception("Redirect without Location header")</ID>
+    <ID>TooGenericExceptionThrown:ModelDownloader.kt$ModelDownloader$throw Exception("Too many redirects")</ID>
+    <ID>UnusedImports:ChatScreen.kt$import androidx.compose.ui.draw.clip</ID>
+    <ID>UnusedImports:ChatScreen.kt$import androidx.compose.ui.text.font.FontWeight</ID>
+    <ID>UseCheckOrError:LocalAiRepository.kt$LocalAiRepository$throw IllegalStateException("Model not initialized")</ID>
+    <ID>UseIfInsteadOfWhen:ChatViewModel.kt$ChatViewModel$when { errorMsg.contains("file not found", ignoreCase = true) -&gt; { "Файл модели не найден. Нажмите «Загрузить», чтобы скачать модель." } else -&gt; { "Не удалось запустить модель: $errorMsg. " + "Файл модели был удалён, попробуйте загрузить заново." } }</ID>
+  </CurrentIssues>
+</SmellBaseline>

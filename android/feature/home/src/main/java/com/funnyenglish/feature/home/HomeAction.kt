@@ -7,4 +7,5 @@ sealed interface HomeAction {
     data object OnGamesClick : HomeAction
     data object OnProfileClick : HomeAction
     data object OnDailyWordClick : HomeAction
+    data object OnRefresh : HomeAction
 }

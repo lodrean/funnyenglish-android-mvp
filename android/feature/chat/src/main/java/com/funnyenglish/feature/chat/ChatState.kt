@@ -8,5 +8,6 @@ data class ChatState(
     val showModelDownloadDialog: Boolean = false,
     val isDownloading: Boolean = false,
     val modelDownloadProgress: Float? = null,
-    val error: String? = null
+    val error: String? = null,
+    val modelVariant: ModelVariant? = null
 )

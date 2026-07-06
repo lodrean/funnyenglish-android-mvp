@@ -6,4 +6,5 @@ sealed interface ChatAction {
     data object DismissBatteryWarning : ChatAction
     data object DismissModelDialog : ChatAction
     data object DownloadModel : ChatAction
+    data object ClearHistory : ChatAction
 }

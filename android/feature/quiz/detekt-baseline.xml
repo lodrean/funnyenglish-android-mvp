@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:QuizScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable private fun QuizContent( state: QuizState, onAction: (QuizAction) -&gt; Unit )</ID>
+    <ID>LongMethod:QuizScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable private fun QuizContent( state: QuizState, onAction: (QuizAction) -&gt; Unit )</ID>
+    <ID>MagicNumber:SoundEffectPlayer.kt$SoundEffectPlayer$150</ID>
+    <ID>MagicNumber:SoundEffectPlayer.kt$SoundEffectPlayer$200</ID>
+    <ID>MagicNumber:SoundEffectPlayer.kt$SoundEffectPlayer$80</ID>
+    <ID>MatchingDeclarationName:QuizData.kt$QuizQuestion</ID>
+    <ID>MaxLineLength:QuizData.kt$QuizQuestion("serendipity", "счастливая случайность", listOf("счастливая случайность", "печаль", "ярость", "скука"))</ID>
+    <ID>MaxLineLength:QuizScreen.kt$color = if (state.isCorrect == true) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.error</ID>
+    <ID>MaxLineLength:QuizScreen.kt$slideInVertically(animationSpec = spring(stiffness = Spring.StiffnessMedium), initialOffsetY = { it / 2 })</ID>
+    <ID>MaxLineLength:QuizScreen.kt$state.selectedAnswer == null -&gt; MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)</ID>
+    <ID>UnusedImports:QuizViewModelTest.kt$import org.junit.Assert.assertNotNull</ID>
+  </CurrentIssues>
+</SmellBaseline>

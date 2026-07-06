@@ -24,6 +24,12 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
 }
 
 dependencies {
@@ -39,4 +45,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.compose)
     implementation(libs.androidx.compose.navigation)
     implementation(libs.kotlinx.coroutines.android)
+
+    testImplementation(libs.junit5)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.turbine)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
