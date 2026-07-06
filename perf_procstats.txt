@@ -1,0 +1,128 @@
+AGGREGATED OVER LAST 1 HOURS:
+          Start time: 2026-07-02 05:14:59
+        Total uptime: +2h30m9s82ms
+  Total elapsed time: +2h30m9s82ms (partial) libart.so
+     Aggregated over: 1
+
+System memory usage:
+   SOn/Norm: 1 samples:
+    Cached: 0.97GB min, 0.97GB avg, 0.97GB max
+    Free: 214MB min, 214MB avg, 214MB max
+    ZRam: 218MB min, 218MB avg, 218MB max
+    Kernel: 559MB min, 559MB avg, 559MB max
+    Native: 1.0GB min, 1.0GB avg, 1.0GB max
+
+Per-Package Stats:
+  * com.funnyenglish.app / u0a231 / v1:
+      * Prc com.funnyenglish.app / u0a231 / v1:
+             TOTAL: 37% (0.00-12MB-110MB/0.00-3.0MB-27MB/241MB-228MB-244MB over 9)
+               Top: 37% (0.00-12MB-110MB/0.00-3.0MB-27MB/241MB-228MB-244MB over 9)
+  * com.android.providers.settings / 1000 / v36:
+      * Asc com.android.providers.settings.SettingsProvider:
+        Process: system
+        Total count 1: time 100%
+        <- com.android.localtransport/1000 (com.android.localtransport)
+        <- com.android.settings/1000 (com.android.settings)
+        <- com.android.phone/1001 (com.android.phone)
+        <- com.google.android.bluetooth/1002 (com.google.android.bluetooth)
+        <- com.android.networkstack.process/1073 (com.google.android.networkstack)
+        <- android.process.media/u0a102 (com.android.providers.downloads)
+        <- android.process.acore/u0a106 (com.android.providers.contacts)
+        <- com.google.android.packageinstaller/u0a109 (com.google.android.packageinstaller)
+        <- com.android.providers.calendar/u0a114 (com.android.providers.calendar)
+        <- com.android.managedprovisioning/u0a116 (com.android.managedprovisioning)
+        <- com.android.externalstorage/u0a118 (com.android.externalstorage)
+        <- com.android.carrierdefaultapp/u0a132 (com.android.carrierdefaultapp)
+        <- com.android.traceur/u0a136 (com.android.traceur)
+        <- com.google.android.apps.messaging/u0a141 (com.google.android.apps.messaging)
+        <- com.google.android.apps.messaging:rcs/u0a141 (com.google.android.apps.messaging)
+        <- com.google.android.partnersetup/u0a142 (com.google.android.partnersetup)
+        <- com.google.android.apps.wellbeing/u0a143 (com.google.android.apps.wellbeing)
+        <- com.google.android.apps.safetyhub/u0a144 (com.google.android.apps.safetyhub)
+        <- com.google.android.apps.restore/u0a145 (com.google.android.apps.restore)
+        <- com.google.android.as.oss/u0a146 (com.google.android.as.oss)
+        <- com.google.android.as/u0a148 (com.google.android.as)
+        <- com.google.android.gms/u0a152 (com.google.android.gms)
+        <- com.google.android.gms.persistent/u0a152 (com.google.android.gms)
+        <- com.google.android.gms.ui/u0a152 (com.google.android.gms)
+        <- com.google.android.gms.unstable/u0a152 (com.google.android.gms)
+        <- com.google.android.settings.intelligence/u0a153 (com.google.android.settings.intelligence)
+        <- com.google.android.googlequicksearchbox:googleapp/u0a156 (com.google.android.googlequicksearchbox)
+        <- com.google.android.googlequicksearchbox:interactor/u0a156 (com.google.android.googlequicksearchbox)
+        <- com.google.android.googlequicksearchbox:search/u0a156 (com.google.android.googlequicksearchbox)
+        <- com.google.android.dialer/u0a157 (com.google.android.dialer)
+        <- com.google.android.inputmethod.latin/u0a160 (com.google.android.inputmethod.latin)
+        <- com.google.android.tts/u0a163 (com.google.android.tts)
+        <- com.android.chrome/u0a169 (com.android.chrome)
+        <- com.google.android.deskclock/u0a170 (com.google.android.deskclock)
+        <- com.google.android.apps.photos/u0a171 (com.google.android.apps.photos)
+        <- com.google.android.marvin.talkback/u0a182 (com.google.android.marvin.talkback)
+        <- com.android.systemui/u0a185 (com.android.systemui)
+        <- com.google.android.apps.wallpaper/u0a188 (com.google.android.apps.wallpaper)
+        <- com.google.android.apps.nexuslauncher/u0a191 (com.google.android.apps.nexuslauncher)
+        <- com.google.android.providers.media.module/u0a199 (com.google.android.providers.media.module)
+        <- com.google.android.photopicker/u0a200 (com.google.android.photopicker)
+        <- com.google.android.cellbroadcastreceiver/u0a201 (com.google.android.cellbroadcastreceiver)
+        <- com.google.android.rkpdapp/u0a203 (com.google.android.rkpdapp)
+        <- com.google.android.ext.services/u0a215 (com.google.android.ext.services)
+        <- com.google.android.permissioncontroller/u0a221 (com.google.android.permissioncontroller)
+        <- com.google.android.ondevicepersonalization.services/u0a222 (com.google.android.ondevicepersonalization.services)
+        <- com.google.android.federatedcompute/u0a223 (com.google.android.federatedcompute)
+        <- com.google.android.adservices.api/u0a224 (com.google.android.adservices.api)
+        <- com.funnyenglish/u0a229 (com.funnyenglish)
+        <- com.android.keychain/1000 (com.android.keychain)
+        <- com.google.android.documentsui/u0a111 (com.google.android.documentsui)
+        <- com.funnyenglish.app/u0a231 (com.funnyenglish.app):
+             Total count 1: time 38%
+        <- com.funnyenglish/u0a232 (com.funnyenglish)
+        <- com.funnyenglish/u0a238 (com.funnyenglish)
+        <- com.funnyenglish/u0a240 (com.funnyenglish)
+        <- com.funnyenglish/u0a242 (com.funnyenglish)
+        <- com.funnyenglish/u0a244 (com.funnyenglish)
+        <- com.funnyenglish/u0a246 (com.funnyenglish)
+  * com.google.android.gms / u0a152 / v253434038:
+      * Asc com.google.android.gms.fonts.provider.FontsProvider:
+        Process: com.google.android.gms.persistent
+        Active count 11: time 0.32%
+        Total count 5: time 0.34%
+        <- com.funnyenglish/u0a246 (com.funnyenglish)
+        <- com.funnyenglish/u0a240 (com.funnyenglish)
+        <- com.funnyenglish/u0a244 (com.funnyenglish)
+        <- com.funnyenglish.app/u0a231 (com.funnyenglish.app):
+             Active count 2: time 0.06%
+             Total count 1: time 0.07%
+  Total procs: 0 shown of 85 total
+
+Per-UID Stats:
+  * u0a231 (2 entries):
+         SOn/Norm/       Top: +55m37s831ms
+                      Frozen: +1m35s770ms
+                       TOTAL: +57m13s601ms
+  Total UIDs: 1 shown of 62 total
+
+Process summary:
+  * com.funnyenglish.app / u0a231 / v1:
+         TOTAL: 37% (0.00-12MB-110MB/0.00-3.0MB-27MB/241MB-228MB-244MB over 9)
+           Top: 37% (0.00-12MB-110MB/0.00-3.0MB-27MB/241MB-228MB-244MB over 9)
+
+Run time Stats:
+   SOn/Norm: +2h30m9s76ms
+      TOTAL: +2h30m9s76ms
+
+Memory usage:
+  Kernel : 559MB (8 samples)
+  Native : 1.0GB (8 samples)
+  Top: 4.5MB (20 samples)
+  LastAct: 1.0MB (10 samples)
+  Frozen: 34MB (97 samples)
+  Cached : 0.97GB (8 samples)
+  Free   : 214MB (8 samples)
+  Z-Ram  : 218MB (8 samples)
+  TOTAL  : 3.0GB
+
+PSS collection stats:
+  Internal Single: 121x over +307ms
+  Internal All Procs (Memory Change): 0x over 0
+  Internal All Procs (Polling): 30x over +1ms
+  External: 0x over 0
+  External Slow: 3x over +116ms

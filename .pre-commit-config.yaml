@@ -1,0 +1,55 @@
+repos:
+  # Python formatting and linting
+  - repo: https://github.com/psf/black
+    rev: 24.10.0
+    hooks:
+      - id: black
+        language_version: python3
+        files: \.py$
+        exclude: ^(android/|\.venv/|__pycache__/)
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        files: \.py$
+        exclude: ^(android/|\.venv/|__pycache__/)
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        files: \.py$
+        exclude: ^(android/|\.venv/|__pycache__/)
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+        args: ['--maxkb=1024']
+      - id: check-merge-conflict
+
+  # Kotlin linting via gradle (for Android)
+  - repo: local
+    hooks:
+      - id: ktlint-check
+        name: ktlint check
+        entry: bash -c 'cd android && ./gradlew ktlintCheck --no-daemon'
+        language: system
+        pass_filenames: false
+        files: ^android/.*\.kt$
+        stages: [pre-commit]
+
+      - id: detekt-check
+        name: detekt check
+        entry: bash -c 'cd android && ./gradlew detekt --no-daemon'
+        language: system
+        pass_filenames: false
+        files: ^android/.*\.kt$
+        stages: [pre-commit]

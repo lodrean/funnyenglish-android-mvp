@@ -22,6 +22,11 @@ class QuizViewModel : ViewModel() {
     private fun checkAnswer(index: Int) {
         val question = _state.value.questions.getOrNull(_state.value.currentQuestionIndex) ?: return
         val correct = question.options[index] == question.correctTranslation
+        if (correct) {
+            SoundEffectPlayer.playCorrect()
+        } else {
+            SoundEffectPlayer.playIncorrect()
+        }
         _state.update {
             it.copy(
                 selectedAnswer = index,

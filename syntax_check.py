@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """Simple syntax and import check for bot"""
 
-import sys
-import os
 import ast
+import os
+import sys
 
 print("=" * 60)
 print("🔍 Bot Code Verification")
 print("=" * 60)
 
 # Read bot.py
-with open('/'.join(os.path.abspath(__file__).split(os.sep)[:-1]) + '/bot.py', 'r') as f:
+with open('/'.join(os.path.abspath(__file__).split(os.sep)[:-1]) + '/bot.py') as f:
     bot_code = f.read()
 
 # Check syntax
@@ -56,10 +56,10 @@ for cls in classes:
 
 # Check GAMES dictionary
 if hasattr(bot, 'GAMES'):
-    print(f"\n💾 GAMES dict: ✅ Defined")
+    print("\n💾 GAMES dict: ✅ Defined")
     print(f"   Current state: {bot.GAMES}")
 else:
-    print(f"\n💾 GAMES dict: ❌ NOT FOUND")
+    print("\n💾 GAMES dict: ❌ NOT FOUND")
 
 print("\n" + "=" * 60)
 print("✨ All checks passed! Bot code is ready.")

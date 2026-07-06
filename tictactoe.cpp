@@ -2,6 +2,7 @@
 #include <vector>
 #include <ctime>
 #include <cstdlib>
+#include <cstdio>
 
 using namespace std;
 
@@ -27,6 +28,9 @@ private:
     vector<vector<char>> board;
     char currentPlayer;
     int moves;
+    vector<vector<vector<char>>> history;
+    vector<char> historyPlayers;
+    vector<int> historyMoves;
     
 public:
     TicTacToe() {
@@ -37,6 +41,26 @@ public:
         board = vector<vector<char>>(3, vector<char>(3, ' '));
         currentPlayer = 'X';
         moves = 0;
+        history.clear();
+        historyPlayers.clear();
+        historyMoves.clear();
+    }
+    
+    void saveState() {
+        history.push_back(board);
+        historyPlayers.push_back(currentPlayer);
+        historyMoves.push_back(moves);
+    }
+    
+    bool undo() {
+        if (history.empty()) return false;
+        board = history.back();
+        currentPlayer = historyPlayers.back();
+        moves = historyMoves.back();
+        history.pop_back();
+        historyPlayers.pop_back();
+        historyMoves.pop_back();
+        return true;
     }
     
     void displayBoard() {
@@ -77,6 +101,7 @@ public:
             return false;
         }
         
+        saveState();
         board[row][col] = currentPlayer;
         moves++;
         return true;
@@ -213,6 +238,52 @@ public:
     }
 };
 
+
+struct Stats {
+    int wins[4];
+    int losses[4];
+    int draws[4];
+    Stats() { for (int i = 0; i < 4; i++) wins[i] = losses[i] = draws[i] = 0; }
+};
+
+void loadStats(Stats& s) {
+    FILE* f = fopen("stats.txt", "r");
+    if (f) {
+        for (int i = 0; i < 4; i++) if (fscanf(f, "%d", &s.wins[i]) != 1) s.wins[i] = 0;
+        for (int i = 0; i < 4; i++) if (fscanf(f, "%d", &s.losses[i]) != 1) s.losses[i] = 0;
+        for (int i = 0; i < 4; i++) if (fscanf(f, "%d", &s.draws[i]) != 1) s.draws[i] = 0;
+        fclose(f);
+    }
+}
+
+void saveStats(const Stats& s) {
+    FILE* f = fopen("stats.txt", "w");
+    if (f) {
+        for (int i = 0; i < 4; i++) fprintf(f, "%d ", s.wins[i]);
+        fprintf(f, "\n");
+        for (int i = 0; i < 4; i++) fprintf(f, "%d ", s.losses[i]);
+        fprintf(f, "\n");
+        for (int i = 0; i < 4; i++) fprintf(f, "%d ", s.draws[i]);
+        fprintf(f, "\n");
+        fclose(f);
+    }
+}
+
+void showStats(const Stats& s) {
+    const char* names[] = {"PvP", "Лёгкий", "Средний", "Сложный"};
+    cout << "\n=== 📊 Статистика ===\n";
+    for (int i = 0; i < 4; i++) {
+        int total = s.wins[i] + s.losses[i] + s.draws[i];
+        if (total > 0) {
+            cout << names[i] << ": Побед " << s.wins[i] 
+                 << ", Поражений " << s.losses[i] 
+                 << ", Ничьих " << s.draws[i] 
+                 << " (Всего " << total << ")\n";
+        }
+    }
+    cout << "====================\n\n";
+}
+
 void showTitle() {
     setColor(COLOR_YELLOW);
     cout << R"(
@@ -242,7 +313,7 @@ void showMenu() {
     cout << "\nВыберите режим: ";
 }
 
-void playGame(int mode) {
+char playGame(int mode) {
     TicTacToe game;
     string input;
     int row, col;
@@ -257,18 +328,43 @@ void playGame(int mode) {
         if (vsComputer && game.getCurrentPlayer() == 'O') {
             cout << " (Компьютер)";
         }
-        cout << "\n";
+        cout << "  [U — отменить ход]\n";
         setColor(COLOR_DEFAULT);
         
         if (vsComputer && game.getCurrentPlayer() == 'O') {
             // Ход компьютера
             cout << "Компьютер думает...\n";
             system("timeout /t 1 >nul"); // Пауза 1 секунда
+            game.saveState();
             game.computerMove(difficulty);
         } else {
             // Ход игрока
-            cout << "Введите ход (например: A1, B2, C3): ";
+            cout << "Введите ход (например: A1, B2, C3) или U для отмены: ";
             cin >> input;
+            
+            if (!cin) {
+                cin.clear();
+                cin.ignore(10000, '\n');
+                setColor(COLOR_RED);
+                cout << "❌ Ошибка ввода. Попробуйте снова.\n";
+                setColor(COLOR_DEFAULT);
+                system("pause");
+                continue;
+            }
+            
+            if (input == "U" || input == "u") {
+                if (game.undo()) {
+                    setColor(COLOR_GREEN);
+                    cout << "✅ Ход отменён.\n";
+                    setColor(COLOR_DEFAULT);
+                } else {
+                    setColor(COLOR_RED);
+                    cout << "❌ Нет ходов для отмены.\n";
+                    setColor(COLOR_DEFAULT);
+                }
+                system("pause");
+                continue;
+            }
             
             if (!game.parseInput(input, row, col)) {
                 setColor(COLOR_RED);
@@ -295,7 +391,7 @@ void playGame(int mode) {
             cout << "║     🎉 ИГРОК " << game.getCurrentPlayer() << " ПОБЕДИЛ! 🎉      ║\n";
             cout << "╚═══════════════════════════════════════╝\n";
             setColor(COLOR_DEFAULT);
-            break;
+            return game.getCurrentPlayer();
         }
         
         // Проверка ничьей
@@ -306,14 +402,11 @@ void playGame(int mode) {
             cout << "║          🤝 НИЧЬЯ! 🤝                ║\n";
             cout << "╚═══════════════════════════════════════╝\n";
             setColor(COLOR_DEFAULT);
-            break;
+            return 'D';
         }
         
         game.switchPlayer();
     }
-    
-    cout << "\n";
-    system("pause");
 }
 
 int main() {
@@ -323,13 +416,27 @@ int main() {
         system("chcp 65001 >nul"); // UTF-8
     #endif
     
+    Stats stats;
+    loadStats(stats);
+    
     int choice;
     
     while (true) {
         system("cls");
         showTitle();
         showMenu();
+        showStats(stats);
         cin >> choice;
+        
+        if (!cin) {
+            cin.clear();
+            cin.ignore(10000, '\n');
+            setColor(COLOR_RED);
+            cout << "\n❌ Неверный выбор! Введите число от 0 до 4.\n";
+            setColor(COLOR_DEFAULT);
+            system("pause");
+            continue;
+        }
         
         if (choice == 0) {
             setColor(COLOR_CYAN);
@@ -346,7 +453,18 @@ int main() {
             continue;
         }
         
-        playGame(choice);
+        char result = playGame(choice);
+        if (result == 'D') {
+            stats.draws[choice]++;
+        } else if (result == 'X') {
+            stats.wins[choice]++;
+        } else {
+            stats.losses[choice]++;
+        }
+        saveStats(stats);
+        
+        cout << "\n";
+        system("pause");
     }
     
     return 0;

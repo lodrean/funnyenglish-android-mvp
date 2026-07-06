@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>LongMethod:DictionaryScreen.kt$@Composable private fun WordDetailCard( word: Word, isFavorite: Boolean, onFavoriteClick: () -&gt; Unit )</ID>
+    <ID>MagicNumber:DictionaryViewModel.kt$DictionaryViewModel$500</ID>
+    <ID>UnusedImports:DictionaryScreen.kt$import androidx.compose.foundation.clickable</ID>
+    <ID>UnusedImports:DictionaryScreen.kt$import androidx.compose.foundation.lazy.LazyColumn</ID>
+    <ID>UnusedImports:DictionaryScreen.kt$import androidx.compose.foundation.lazy.items</ID>
+  </CurrentIssues>
+</SmellBaseline>

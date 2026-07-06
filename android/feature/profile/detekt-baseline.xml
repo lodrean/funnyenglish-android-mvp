@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>UnusedImports:ProfileViewModelTest.kt$import org.junit.Assert.assertFalse</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -39,11 +40,17 @@ dependencies {
     implementation(libs.androidx.lifecycle.compose)
     implementation(libs.androidx.compose.navigation)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.serialization.json)
 
     // MediaPipe LLM Inference
-    implementation("com.google.mediapipe:tasks-genai:0.10.14")
+    // Updated from 0.10.14 → 0.10.22 to fix known native crash (SIGSEGV)
+    // during CPU inference on some devices (see mediapipe-samples#434).
+    implementation("com.google.mediapipe:tasks-genai:0.10.22")
 
     // Play Asset Delivery
     implementation(libs.play.asset.delivery)
     implementation(libs.play.asset.delivery.ktx)
+
+    // DataStore
+    implementation(libs.datastore.preferences)
 }

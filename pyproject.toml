@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "funnyenglish"
+version = "1.0.0"
+description = "Funny English Telegram Bot + Android App"
+requires-python = ">=3.11"
+dependencies = [
+    "python-telegram-bot>=20.0",
+    "Pillow>=10.0.0",
+    "openai>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=24.0",
+    "isort>=5.13",
+    "ruff>=0.6.0",
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[tool.black]
+line-length = 120
+target-version = ['py311', 'py312', 'py313']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | __pycache__
+  | android
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+skip_glob = [".venv/**", "__pycache__/**", "android/**"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # Pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by black)
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["."]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["bot"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+]

@@ -1,0 +1,40 @@
+spring:
+  profiles:
+    active: prod
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/funnyenglish
+    username: ${DB_USER:funnyenglish}
+    password: ${DB_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+
+  h2:
+    console:
+      enabled: false
+
+  sql:
+    init:
+      mode: never
+
+server:
+  port: 8080
+  forward-headers-strategy: native
+
+logging:
+  level:
+    root: WARN
+    com.funnyenglish: INFO
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/funnyenglish/app.log

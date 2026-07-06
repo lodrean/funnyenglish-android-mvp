@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — FunnyEnglish Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="../../static/css/admin.css">
+</head>
+<body>
+    <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+    <div class="sidebar-overlay" onclick="document.querySelector('.sidebar').classList.remove('open')"></div>
+    <nav class="sidebar">
+        <div class="brand">🎮 FunnyEnglish</div>
+        <a href="/admin/dashboard" class="nav-link active">📊 Dashboard</a>
+        <a href="/admin/users" class="nav-link">👥 Пользователи</a>
+        <a href="/admin/games" class="nav-link">🎲 Игры</a>
+        <a href="/admin/chat" class="nav-link">💬 Чат</a>
+        <a href="/h2-console" class="nav-link" target="_blank">🗄️ H2 Console</a>
+        <form th:action="@{/admin/logout}" method="post" class="logout-form">
+            <button type="submit" class="logout-btn">🚪 Выйти</button>
+        </form>
+    </nav>
+
+    <main class="content">
+        <div class="breadcrumbs"><a href="/admin/dashboard">Dashboard</a> <span>/</span> <span>Обзор</span></div>
+        <h1>Dashboard</h1>
+
+        <div class="cards" th:if="${stats}">
+            <a href="/admin/users" class="card-link">
+                <div class="card">
+                    <div class="card-value" th:text="${stats.totalUsers}">0</div>
+                    <div class="card-label">Всего пользователей</div>
+                </div>
+            </a>
+            <a href="/admin/users" class="card-link">
+                <div class="card">
+                    <div class="card-value" th:text="${stats.activeUsersToday}">0</div>
+                    <div class="card-label">Активны сегодня</div>
+                </div>
+            </a>
+            <a href="/admin/users" class="card-link">
+                <div class="card">
+                    <div class="card-value" th:text="${stats.activeUsersWeek}">0</div>
+                    <div class="card-label">Активны за неделю</div>
+                </div>
+            </a>
+            <a href="/admin/games" class="card-link">
+                <div class="card">
+                    <div class="card-value" th:text="${stats.totalGames}">0</div>
+                    <div class="card-label">Всего игр</div>
+                </div>
+            </a>
+            <a href="/admin/games" class="card-link">
+                <div class="card">
+                    <div class="card-value" th:text="${stats.activeGames}">0</div>
+                    <div class="card-label">Активные игры</div>
+                </div>
+            </a>
+            <a href="/admin/chat" class="card-link">
+                <div class="card">
+                    <div class="card-value" th:text="${stats.totalMessages}">0</div>
+                    <div class="card-label">Сообщений</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="tables-row">
+            <div class="panel">
+                <h2>👥 Последние пользователи</h2>
+                <table>
+                    <thead>
+                        <tr><th>ID</th><th>Telegram</th><th>Имя</th><th>Игры</th><th>Побед</th><th>Активность</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="u : ${stats.recentUsers}">
+                            <td th:text="${u.id}">1</td>
+                            <td th:text="${u.telegramId}">123</td>
+                            <td th:text="${u.firstName} ?: ${u.username} ?: '—'">Name</td>
+                            <td th:text="${u.gamesPlayed}">0</td>
+                            <td th:text="${u.gamesWon}">0</td>
+                            <td th:text="${u.lastActivityAt}">—</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(stats.recentUsers)}">
+                            <td colspan="6" class="empty">Нет данных</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel">
+                <h2>🎲 Последние игры</h2>
+                <table>
+                    <thead>
+                        <tr><th>ID</th><th>Тип</th><th>Статус</th><th>Результат</th><th>Ходов</th><th>Начало</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="g : ${stats.recentGames}">
+                            <td th:text="${g.id}">1</td>
+                            <td th:text="${g.gameType}">TIC_TAC_TOE</td>
+                            <td><span class="badge" th:classappend="' badge-' + ${g.status.name().toLowerCase()}" th:text="${g.status}">IN_PROGRESS</span></td>
+                            <td th:text="${g.result}">UNKNOWN</td>
+                            <td th:text="${g.movesCount}">0</td>
+                            <td th:text="${g.startedAt}">—</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(stats.recentGames)}">
+                            <td colspan="6" class="empty">Нет данных</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>💬 Последние сообщения</h2>
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Пользователь</th><th>Тип</th><th>Сообщение</th><th>Время</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="m : ${stats.recentMessages}">
+                        <td th:text="${m.id}">1</td>
+                        <td th:text="${m.userName} ?: ${m.userId}">User</td>
+                        <td><span class="badge" th:classappend="${m.isFromUser} ? 'badge-user' : 'badge-ai'" th:text="${m.isFromUser} ? 'Пользователь' : 'AI'">Тип</span></td>
+                        <td th:text="${m.content.length() > 80} ? ${m.content.substring(0, 80)} + '…' : ${m.content}">Text</td>
+                        <td th:text="${m.sentAt}">—</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(stats.recentMessages)}">
+                        <td colspan="5" class="empty">Нет данных</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,53 @@
+name: CI Python
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - '*.py'
+      - 'requirements*.txt'
+      - '.github/workflows/ci-python.yml'
+      - 'pyproject.toml'
+      - '.pre-commit-config.yaml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - '*.py'
+      - 'requirements*.txt'
+      - '.github/workflows/ci-python.yml'
+      - 'pyproject.toml'
+      - '.pre-commit-config.yaml'
+
+jobs:
+  python-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run syntax check
+        run: python syntax_check.py
+
+      - name: Run ruff linter
+        run: ruff check bot.py test_bot.py syntax_check.py final_check.py
+
+      - name: Check isort formatting
+        run: isort --check-only bot.py test_bot.py syntax_check.py final_check.py
+
+      - name: Check black formatting
+        run: black --check bot.py test_bot.py syntax_check.py final_check.py
+
+      - name: Run tests
+        run: pytest test_bot.py -v

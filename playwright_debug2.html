@@ -1,0 +1,114 @@
+<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — FunnyEnglish Admin</title>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+    <div class="sidebar-overlay" onclick="document.querySelector('.sidebar').classList.remove('open')"></div>
+    <nav class="sidebar">
+        <div class="brand">🎮 FunnyEnglish</div>
+        <a href="/admin/dashboard" class="nav-link active">📊 Dashboard</a>
+        <a href="/admin/users" class="nav-link">👥 Пользователи</a>
+        <a href="/admin/games" class="nav-link">🎲 Игры</a>
+        <a href="/admin/chat" class="nav-link">💬 Чат</a>
+        <a href="/h2-console" class="nav-link" target="_blank">🗄️ H2 Console</a>
+        <form action="/admin/logout" method="post" class="logout-form"><input type="hidden" name="_csrf" value="_474SjyTb_x3hHkDZe3i3IouRSM2Aj8g6rHLvJfaz-xaN1NonbzMfQmnXMxa5xw6UMDW6-kXaBpSNAsN24b_jKa8_og8UjJf">
+            <button type="submit" class="logout-btn">🚪 Выйти</button>
+        </form>
+    </nav>
+
+    <main class="content">
+        <div class="breadcrumbs"><a href="/admin/dashboard">Dashboard</a> <span>/</span> <span>Обзор</span></div>
+        <h1>Dashboard</h1>
+
+        <div class="cards">
+            <a href="/admin/users" class="card-link">
+                <div class="card">
+                    <div class="card-value">0</div>
+                    <div class="card-label">Всего пользователей</div>
+                </div>
+            </a>
+            <a href="/admin/users" class="card-link">
+                <div class="card">
+                    <div class="card-value">0</div>
+                    <div class="card-label">Активны сегодня</div>
+                </div>
+            </a>
+            <a href="/admin/users" class="card-link">
+                <div class="card">
+                    <div class="card-value">0</div>
+                    <div class="card-label">Активны за неделю</div>
+                </div>
+            </a>
+            <a href="/admin/games" class="card-link">
+                <div class="card">
+                    <div class="card-value">0</div>
+                    <div class="card-label">Всего игр</div>
+                </div>
+            </a>
+            <a href="/admin/games" class="card-link">
+                <div class="card">
+                    <div class="card-value">0</div>
+                    <div class="card-label">Активные игры</div>
+                </div>
+            </a>
+            <a href="/admin/chat" class="card-link">
+                <div class="card">
+                    <div class="card-value">0</div>
+                    <div class="card-label">Сообщений</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="tables-row">
+            <div class="panel">
+                <h2>👥 Последние пользователи</h2>
+                <table>
+                    <thead>
+                        <tr><th>ID</th><th>Telegram</th><th>Имя</th><th>Игры</th><th>Побед</th><th>Активность</th></tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td colspan="6" class="empty">Нет данных</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel">
+                <h2>🎲 Последние игры</h2>
+                <table>
+                    <thead>
+                        <tr><th>ID</th><th>Тип</th><th>Статус</th><th>Результат</th><th>Ходов</th><th>Начало</th></tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr>
+                            <td colspan="6" class="empty">Нет данных</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>💬 Последние сообщения</h2>
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Пользователь</th><th>Тип</th><th>Сообщение</th><th>Время</th></tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td colspan="5" class="empty">Нет данных</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+
+</body></html>

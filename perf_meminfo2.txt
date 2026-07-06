@@ -1,0 +1,4 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 167883088 Realtime: 167883088
+
+** MEMINFO in pid 13418 [com.funnyenglish.app] **
