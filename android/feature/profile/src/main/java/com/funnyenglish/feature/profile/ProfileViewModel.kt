@@ -22,6 +22,26 @@ class ProfileViewModel(
                 _state.update { it.copy(isDarkMode = isDark) }
             }
         }
+        // Load mock user data (replace with real repository call)
+        _state.update {
+            it.copy(
+                userName = "Ученик",
+                level = 3,
+                levelTitle = "English Explorer",
+                xp = 450,
+                xpToNextLevel = 500,
+                streakDays = 3,
+                wordsLearned = 12,
+                achievements = listOf(
+                    Achievement("🌱", "Первые шаги", true),
+                    Achievement("📚", "Словарный запас", true),
+                    Achievement("🏆", "Непобедимый", false),
+                    Achievement("🔥", "Марафонец", false),
+                    Achievement("👑", "Чемпион", false),
+                    Achievement("🌍", "Полиглот", false)
+                )
+            )
+        }
     }
 
     fun toggleDarkMode(enabled: Boolean) {
@@ -32,5 +52,19 @@ class ProfileViewModel(
 }
 
 data class ProfileState(
-    val isDarkMode: Boolean = false
+    val isDarkMode: Boolean = false,
+    val userName: String = "",
+    val level: Int = 1,
+    val levelTitle: String = "",
+    val xp: Int = 0,
+    val xpToNextLevel: Int = 100,
+    val streakDays: Int = 0,
+    val wordsLearned: Int = 0,
+    val achievements: List<Achievement> = emptyList()
+)
+
+data class Achievement(
+    val icon: String,
+    val name: String,
+    val isUnlocked: Boolean
 )

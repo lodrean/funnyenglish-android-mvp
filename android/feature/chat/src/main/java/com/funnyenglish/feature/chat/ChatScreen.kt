@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
 
@@ -87,6 +88,7 @@ private fun ChatContent(
     onAction: (ChatAction) -> Unit
 ) {
     val listState = rememberLazyListState()
+    val view = LocalView.current
 
     LaunchedEffect(state.messages.size) {
         if (state.messages.isNotEmpty()) {
@@ -122,7 +124,10 @@ private fun ChatContent(
             ChatInputBar(
                 inputText = state.inputText,
                 onInputChange = { onAction(ChatAction.InputChanged(it)) },
-                onSend = { onAction(ChatAction.SendMessage) },
+                onSend = {
+                    view.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+                    onAction(ChatAction.SendMessage)
+                },
                 enabled = !state.isLoading
             )
         },
@@ -236,7 +241,7 @@ private fun ChatBubble(message: ChatMessage) {
                     MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                 }
             ),
-            modifier = Modifier.widthIn(max = 280.dp)
+            modifier = Modifier.fillMaxWidth(0.75f)
         ) {
             Box(modifier = Modifier.padding(12.dp)) {
                 if (message.isLoading) {

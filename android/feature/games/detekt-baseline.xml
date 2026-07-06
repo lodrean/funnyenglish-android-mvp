@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:TicTacToeGame.kt$TicTacToeGame$fun botMove(): TicTacToeGame</ID>
+    <ID>LongMethod:GamesScreen.kt$@Composable private fun TicTacToeBoard( game: TicTacToeGame, onMove: (Int, Int) -&gt; Unit )</ID>
+    <ID>LongMethod:GamesScreen.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun GamesScreen()</ID>
+    <ID>MagicNumber:TicTacToeGame.kt$TicTacToeGame$3</ID>
+    <ID>NestedBlockDepth:TicTacToeGame.kt$TicTacToeGame$fun botMove(): TicTacToeGame</ID>
+    <ID>ReturnCount:GamesViewModel.kt$GamesViewModel$private fun makeMove(row: Int, col: Int)</ID>
+    <ID>ReturnCount:TicTacToeGame.kt$TicTacToeGame$fun botMove(): TicTacToeGame</ID>
+    <ID>ReturnCount:TicTacToeGame.kt$TicTacToeGame$fun makeMove(row: Int, col: Int): TicTacToeGame</ID>
+    <ID>ReturnCount:TicTacToeGame.kt$TicTacToeGame$private fun calculateGameState(lastPlayer: Char): Pair&lt;Char?, Boolean&gt;</ID>
+    <ID>ReturnCount:TicTacToeGame.kt$TicTacToeGame$private fun checkWinner(player: Char): Boolean</ID>
+    <ID>UnusedImports:GamesScreen.kt$import androidx.compose.animation.core.Spring</ID>
+    <ID>UnusedImports:GamesScreen.kt$import androidx.compose.animation.core.animateFloatAsState</ID>
+    <ID>UnusedImports:GamesScreen.kt$import androidx.compose.animation.core.spring</ID>
+    <ID>UnusedImports:GamesScreen.kt$import androidx.compose.foundation.layout.fillMaxWidth</ID>
+    <ID>UnusedImports:GamesScreen.kt$import androidx.compose.ui.draw.scale</ID>
+    <ID>UnusedImports:GamesScreen.kt$import androidx.compose.ui.graphics.Color</ID>
+    <ID>UnusedImports:GamesScreen.kt$import androidx.compose.ui.unit.sp</ID>
+    <ID>UnusedPrivateProperty:GamesScreen.kt$val animatedScale = if (isNewMove) { // Use a static value for Canvas — animation handled by overlay 1f } else 1f</ID>
+    <ID>UnusedPrivateProperty:GamesViewModelTest.kt$GamesViewModelTest$val afterFirstMove = awaitItem()</ID>
+  </CurrentIssues>
+</SmellBaseline>

@@ -64,17 +64,17 @@ private fun ProfileContent(
         ) {
             // User header
             item {
-                UserHeader()
+                UserHeader(userName = state.userName, levelTitle = state.levelTitle)
             }
 
             // Stats cards
             item {
-                StatsRow()
+                StatsRow(streak = state.streakDays, xp = state.xp, words = state.wordsLearned)
             }
 
             // Level progress
             item {
-                LevelCard()
+                LevelCard(level = state.level, xp = state.xp, xpToNext = state.xpToNextLevel)
             }
 
             // Settings
@@ -94,14 +94,14 @@ private fun ProfileContent(
                 )
             }
             item {
-                AchievementsGrid()
+                AchievementsGrid(achievements = state.achievements)
             }
         }
     }
 }
 
 @Composable
-private fun UserHeader() {
+private fun UserHeader(userName: String, levelTitle: String) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -122,12 +122,12 @@ private fun UserHeader() {
         }
         Spacer(modifier = Modifier.height(12.dp))
         Text(
-            text = "Ученик",
+            text = userName,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = "Уровень 3 • English Explorer",
+            text = levelTitle,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -135,14 +135,14 @@ private fun UserHeader() {
 }
 
 @Composable
-private fun StatsRow() {
+private fun StatsRow(streak: Int, xp: Int, words: Int) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        StatCard("🔥", "3", "Streak", Modifier.weight(1f))
-        StatCard("⭐", "450", "XP", Modifier.weight(1f))
-        StatCard("📚", "12", "Слов", Modifier.weight(1f))
+        StatCard("🔥", streak.toString(), "Streak", Modifier.weight(1f))
+        StatCard("⭐", xp.toString(), "XP", Modifier.weight(1f))
+        StatCard("📚", words.toString(), "Слов", Modifier.weight(1f))
     }
 }
 
@@ -178,7 +178,9 @@ private fun StatCard(emoji: String, value: String, label: String, modifier: Modi
 }
 
 @Composable
-private fun LevelCard() {
+private fun LevelCard(level: Int, xp: Int, xpToNext: Int) {
+    val progress = if (xpToNext > 0) xp.toFloat() / xpToNext else 1f
+    val remaining = maxOf(0, xpToNext - xp)
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -192,19 +194,19 @@ private fun LevelCard() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Уровень 3",
+                    text = "Уровень $level",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "450 / 500 XP",
+                    text = "$xp / $xpToNext XP",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))
             LinearProgressIndicator(
-                progress = { 0.9f },
+                progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
@@ -212,7 +214,7 @@ private fun LevelCard() {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Ещё 50 XP до уровня 4!",
+                text = "Ещё $remaining XP до уровня ${level + 1}!",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -260,28 +262,24 @@ private fun SettingsCard(
 }
 
 @Composable
-private fun AchievementsGrid() {
-    val achievements = listOf(
-        "🌱" to "Первые шаги",
-        "📚" to "Словарный запас",
-        "🏆" to "Непобедимый",
-        "🔥" to "Марафонец",
-        "👑" to "Чемпион",
-        "🌍" to "Полиглот"
-    )
-
+private fun AchievementsGrid(achievements: List<Achievement>) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         achievements.chunked(3).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                row.forEach { (icon, name) ->
+                row.forEach { achievement ->
+                    val isUnlocked = achievement.isUnlocked
                     Card(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                            containerColor = if (isUnlocked) {
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                            } else {
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
+                            }
                         )
                     ) {
                         Column(
@@ -290,12 +288,25 @@ private fun AchievementsGrid() {
                                 .padding(12.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(icon, fontSize = 24.sp)
+                            if (isUnlocked) {
+                                Text(achievement.icon, fontSize = 24.sp)
+                            } else {
+                                Text(
+                                    "🔒",
+                                    fontSize = 24.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
+                            }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = name,
+                                text = achievement.name,
                                 style = MaterialTheme.typography.labelSmall,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                color = if (isUnlocked) {
+                                    MaterialTheme.colorScheme.onSurface
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                }
                             )
                         }
                     }

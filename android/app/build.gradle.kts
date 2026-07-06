@@ -14,6 +14,12 @@ if (localPropertiesFile.exists()) {
     localPropertiesFile.inputStream().use { localProperties.load(it) }
 }
 
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
+}
+
 android {
     namespace = "com.funnyenglish"
     compileSdk = 34
@@ -31,7 +37,15 @@ android {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
     }
-    assetPacks += listOf(":model_asset_pack")
+
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties.getProperty("keyAlias", "")
+            keyPassword = keystoreProperties.getProperty("keyPassword", "")
+            storeFile = keystoreProperties.getProperty("storeFile", "")?.let { file(it) }
+            storePassword = keystoreProperties.getProperty("storePassword", "")
+        }
+    }
 
     tracer {
         create("defaultConfig") {
@@ -49,6 +63,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -99,8 +114,6 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.kotlinx.serialization.json)
-    implementation(libs.play.asset.delivery)
-    implementation(libs.play.asset.delivery.ktx)
 
     // AppTracer (RuStore analytics / crash reporting)
     implementation(platform(libs.tracer.platform))
@@ -108,4 +121,16 @@ dependencies {
     implementation(libs.tracer.crash.report)
     implementation(libs.tracer.crash.report.native)
     implementation(libs.tracer.heap.dumps)
+
+    // RuStore Push (опционально, для push-уведомлений через RuStore)
+    // implementation("ru.ok.push:push-client:X.Y.Z")
+
+    // AppGallery Push (опционально, для HMS push)
+    // implementation("com.huawei.hms:push:6.12.0.300")
+
+    // UI Testing
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.3.0")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test:rules:1.6.1")
 }

@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: funnyenglish-backend
+  datasource:
+    url: jdbc:h2:mem:funnyenglish;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+
+admin:
+  username: admin
+  password: admin123
+
+logging:
+  level:
+    org.springframework.security: INFO
+    com.funnyenglish.backend: DEBUG

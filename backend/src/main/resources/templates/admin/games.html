@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игры — FunnyEnglish Admin</title>
+    <link rel="stylesheet" th:href="@{/css/admin.css}" href="../../static/css/admin.css">
+</head>
+<body>
+    <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+    <div class="sidebar-overlay" onclick="document.querySelector('.sidebar').classList.remove('open')"></div>
+    <nav class="sidebar">
+        <div class="brand">🎮 FunnyEnglish</div>
+        <a href="/admin/dashboard" class="nav-link">📊 Dashboard</a>
+        <a href="/admin/users" class="nav-link">👥 Пользователи</a>
+        <a href="/admin/games" class="nav-link active">🎲 Игры</a>
+        <a href="/admin/chat" class="nav-link">💬 Чат</a>
+        <a href="/h2-console" class="nav-link" target="_blank">🗄️ H2 Console</a>
+        <form th:action="@{/admin/logout}" method="post" class="logout-form">
+            <button type="submit" class="logout-btn">🚪 Выйти</button>
+        </form>
+    </nav>
+
+    <main class="content">
+        <div class="breadcrumbs"><a href="/admin/dashboard">Dashboard</a> <span>/</span> <span>Игры</span></div>
+        <h1>Игры</h1>
+        <input type="search" class="search-input" placeholder="🔍 Поиск по ID или типу..." onkeyup="filterTable(this, 0)">
+
+        <div class="panel">
+            <h2>🟢 Активные игры</h2>
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Тип</th><th>Игрок X</th><th>Игрок O</th><th>Ходов</th><th>Начало</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="g : ${activeGames}">
+                        <td th:text="${g.id}">1</td>
+                        <td th:text="${g.gameType}">TIC_TAC_TOE</td>
+                        <td th:text="${g.playerXId}">123</td>
+                        <td th:text="${g.playerOId} ?: '—'">456</td>
+                        <td th:text="${g.movesCount}">0</td>
+                        <td th:text="${g.startedAt}">—</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(activeGames)}">
+                        <td colspan="6" class="empty">Нет активных игр</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <h2>📜 Все игры</h2>
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Тип</th><th>Статус</th><th>Результат</th><th>Игрок X</th><th>Игрок O</th><th>Ходов</th><th>Начало</th><th>Конец</th></tr>
+                </thead>
+                <tbody>
+                    <tr th:each="g : ${games}">
+                        <td th:text="${g.id}">1</td>
+                        <td th:text="${g.gameType}">TIC_TAC_TOE</td>
+                        <td><span class="badge" th:classappend="' badge-' + ${g.status.name().toLowerCase()}" th:text="${g.status}">IN_PROGRESS</span></td>
+                        <td th:text="${g.result}">UNKNOWN</td>
+                        <td th:text="${g.playerXId}">123</td>
+                        <td th:text="${g.playerOId} ?: '—'">456</td>
+                        <td th:text="${g.movesCount}">0</td>
+                        <td th:text="${g.startedAt}">—</td>
+                        <td th:text="${g.finishedAt} ?: '—'">—</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(games)}">
+                        <td colspan="9" class="empty">Нет игр</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+    <script>
+        function filterTable(input, colIdx) {
+            const val = input.value.toLowerCase();
+            document.querySelectorAll('tbody tr').forEach(row => {
+                if (!row.querySelector('td')) return;
+                const txt = row.textContent.toLowerCase();
+                row.style.display = txt.includes(val) ? '' : 'none';
+            });
+        }
+    </script>
+</body>
+</html>

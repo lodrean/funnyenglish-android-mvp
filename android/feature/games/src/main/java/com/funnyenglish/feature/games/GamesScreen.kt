@@ -40,6 +40,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.view.HapticFeedbackConstants
+import androidx.compose.ui.platform.LocalView
 import com.funnyenglish.core.designsystem.components.ConfettiOverlay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +49,7 @@ import com.funnyenglish.core.designsystem.components.ConfettiOverlay
 fun GamesScreen() {
     var game by remember { mutableStateOf(TicTacToeGame()) }
     var message by remember { mutableStateOf("Твой ход (X)") }
+    val view = LocalView.current
 
     var showConfetti by rememberSaveable { mutableStateOf(false) }
 
@@ -85,11 +88,12 @@ fun GamesScreen() {
                     TicTacToeBoard(
                         game = game,
                         onMove = { row, col ->
+                            view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                             val newGame = game.makeMove(row, col)
                             if (newGame !== game) {
                                 game = newGame
                                 message = when {
-                                    game.winner == 'X' -> { showConfetti = true; "🎉 Ты победил!" }
+                                    game.winner == 'X' -> { showConfetti = true; view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS); "🎉 Ты победил!" }
                                     game.isDraw -> "🤝 Ничья!"
                                     else -> {
                                         game = game.botMove()
@@ -109,6 +113,7 @@ fun GamesScreen() {
 
                 Button(
                     onClick = {
+                        view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
                         game = TicTacToeGame()
                         message = "Твой ход (X)"
                         showConfetti = false
@@ -132,7 +137,7 @@ private fun TicTacToeBoard(
 
     Box(
         modifier = Modifier
-            .size(300.dp)
+            .fillMaxWidth(0.85f)
             .padding(8.dp)
             .pointerInput(Unit) {
                 detectTapGestures { offset ->

@@ -42,6 +42,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.funnyenglish.core.designsystem.components.ConfettiOverlay
+import android.view.HapticFeedbackConstants
+import androidx.compose.ui.platform.LocalView
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,9 +52,19 @@ fun QuizScreen(
     viewModel: QuizViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val view = LocalView.current
+
     QuizContent(
         state = state,
-        onAction = viewModel::onAction
+        onAction = { action ->
+            if (action is QuizAction.SelectAnswer) {
+                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            }
+            if (action is QuizAction.NextQuestion || action is QuizAction.Restart) {
+                view.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            }
+            viewModel.onAction(action)
+        }
     )
 }
 

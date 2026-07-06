@@ -37,6 +37,16 @@ android/.cxx/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 
+# Keystore and signing
+keystore.properties
+*.keystore
+*.jks
+
+# Docker volumes
+postgres_data/
+nginx_logs/
+backups/
+
 # Model binaries (too large)
 *.bin
 android/model_asset_pack/src/main/assets/*.bin

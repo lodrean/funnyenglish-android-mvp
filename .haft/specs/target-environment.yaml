@@ -1,0 +1,23 @@
+id: TS.environment-change.001
+kind: target.environment
+title: FunnyEnglish Android App Environment Change
+owner: com.funnyenglish.android
+statement_type: capability
+claim_layer: system
+valid_until: "2026-08-06T00:00:00Z"
+spec: |
+  After FunnyEnglish runs, a Russian-speaking user aged 16–35 can open
+  the app on their Android phone and:
+
+  1. Search English words offline (cached in Room) and hear TTS pronunciation
+  2. Take vocabulary quizzes with 4-option multiple choice, scoring XP
+  3. Chat with an on-device AI companion "Archie" (Gemma 2B via MediaPipe)
+     without an internet connection after initial model download
+  4. Play mini-games (tic-tac-toe vs bot) that reinforce vocabulary
+  5. Track daily streaks, XP levels, and achievements in a profile screen
+  6. Receive a daily "Word of the Day" push notification
+
+  The observable difference before vs after: the phone becomes a
+  self-contained English-learning device with offline AI, interactive
+  quizzes, and progress tracking, replacing the prior state where the
+  user had no such consolidated, gamified, offline-capable tool.

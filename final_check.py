@@ -3,13 +3,12 @@
 Final verification that bot.py is correctly structured for Telegram
 """
 import ast
-import sys
 
 print("=" * 70)
 print("🤖 FINAL BOT VERIFICATION")
 print("=" * 70)
 
-with open('bot.py', 'r') as f:
+with open('bot.py') as f:
     code = f.read()
 
 # Parse
@@ -48,10 +47,10 @@ print(f"\n✅ Handlers Found: {len(found)}/{len(handlers)}")
 if missing:
     print(f"  ❌ Missing: {missing}")
 else:
-    print(f"  All required handlers present!")
+    print("  All required handlers present!")
 
 # Check GAMES dict initialization
-games_found = any('GAMES' in node.targets[0].id if isinstance(node, ast.Assign) and node.targets else False 
+games_found = any('GAMES' in node.targets[0].id if isinstance(node, ast.Assign) and node.targets else False
                   for node in ast.walk(tree))
 
 print(f"\n✅ GAMES Dict: {'Found' if games_found else 'NOT FOUND'}")

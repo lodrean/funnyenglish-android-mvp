@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>MagicNumber:Color.kt$0xFF004D43</ID>
+    <ID>MagicNumber:Color.kt$0xFF00BFA6</ID>
+    <ID>MagicNumber:Color.kt$0xFF1A0066</ID>
+    <ID>MagicNumber:Color.kt$0xFF1C1B1F</ID>
+    <ID>MagicNumber:Color.kt$0xFF410E0B</ID>
+    <ID>MagicNumber:Color.kt$0xFF49454F</ID>
+    <ID>MagicNumber:Color.kt$0xFF66001A</ID>
+    <ID>MagicNumber:Color.kt$0xFF6C63FF</ID>
+    <ID>MagicNumber:Color.kt$0xFF79747E</ID>
+    <ID>MagicNumber:Color.kt$0xFFB3261E</ID>
+    <ID>MagicNumber:Color.kt$0xFFCAC4D0</ID>
+    <ID>MagicNumber:Color.kt$0xFFD6F9F4</ID>
+    <ID>MagicNumber:Color.kt$0xFFE7E0EC</ID>
+    <ID>MagicNumber:Color.kt$0xFFE8E6FF</ID>
+    <ID>MagicNumber:Color.kt$0xFFF8F9FE</ID>
+    <ID>MagicNumber:Color.kt$0xFFF9DEDC</ID>
+    <ID>MagicNumber:Color.kt$0xFFFF6584</ID>
+    <ID>MagicNumber:Color.kt$0xFFFFD9E0</ID>
+    <ID>MagicNumber:Color.kt$0xFFFFFFFF</ID>
+    <ID>MagicNumber:Confetti.kt$0.2f</ID>
+    <ID>MagicNumber:Confetti.kt$0.3f</ID>
+    <ID>MagicNumber:Confetti.kt$0.5f</ID>
+    <ID>MagicNumber:Confetti.kt$0.8f</ID>
+    <ID>MagicNumber:Confetti.kt$360f</ID>
+    <ID>MagicNumber:Confetti.kt$4</ID>
+    <ID>MagicNumber:Confetti.kt$ConfettiParticle.Companion$0xFF4ECDC4</ID>
+    <ID>MagicNumber:Confetti.kt$ConfettiParticle.Companion$0xFF95E1D3</ID>
+    <ID>MagicNumber:Confetti.kt$ConfettiParticle.Companion$0xFFA8D8EA</ID>
+    <ID>MagicNumber:Confetti.kt$ConfettiParticle.Companion$0xFFAA96DA</ID>
+    <ID>MagicNumber:Confetti.kt$ConfettiParticle.Companion$0xFFF38181</ID>
+    <ID>MagicNumber:Confetti.kt$ConfettiParticle.Companion$0xFFFCBAD3</ID>
+    <ID>MagicNumber:Confetti.kt$ConfettiParticle.Companion$0xFFFF6B6B</ID>
+    <ID>MagicNumber:Confetti.kt$ConfettiParticle.Companion$0xFFFFE66D</ID>
+    <ID>MagicNumber:Confetti.kt$ConfettiParticle.Companion$100f</ID>
+    <ID>MaxLineLength:Confetti.kt$val y = particle.startY + (particle.velocityY * progress * canvasHeight * 0.8f) + (progress * progress * canvasHeight * 0.3f)</ID>
+    <ID>UnusedImports:Confetti.kt$import kotlin.math.cos</ID>
+    <ID>UnusedImports:Confetti.kt$import kotlin.math.sin</ID>
+  </CurrentIssues>
+</SmellBaseline>

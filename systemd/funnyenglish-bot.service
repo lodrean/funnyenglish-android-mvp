@@ -1,0 +1,17 @@
+[Unit]
+Description=FunnyEnglish Telegram Bot
+After=network.target
+
+[Service]
+Type=simple
+User=funnyenglish
+WorkingDirectory=/opt/funnyenglish
+Environment=TELEGRAM_TOKEN=%i
+Environment=OPENAI_API_KEY=%i
+Environment=BACKEND_URL=http://localhost:8080
+ExecStart=/opt/funnyenglish/.venv/bin/python /opt/funnyenglish/bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

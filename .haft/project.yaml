@@ -1,0 +1,9 @@
+project:
+  name: funnyenglish
+  display_name: FunnyEnglish
+  root: "C:\\Users\\etaba\\funnyenglish"
+  language: kotlin
+  platform: android
+  description: |
+    Android app for learning English through games, AI chat, and gamification.
+    Built with Jetpack Compose, Koin DI, Room, Ktor, and MediaPipe on-device LLM.
